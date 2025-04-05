@@ -9,6 +9,7 @@ import { useState } from "react";
 import Modal from "react-modal";
 import ProductUpdate from "../update/productUpdate.js";
 import DeleteButton from "../delete/deleteButton.js";
+import Footer from "../../forntend/Footer.js";
 
 Modal.setAppElement("#root");
 
@@ -90,6 +91,7 @@ function Product() {
                   <th scope="col">Name</th>
                   <th scope="col">Description</th>
                   <th scope="col">Price</th>
+                  <th scope="col">Originalprice</th>
                   <th scope="col">Offer Price</th>
                   <th scope="col">Status</th>
                   <th scope="col">Edit</th>
@@ -141,6 +143,7 @@ function Product() {
                      
                     {product.price}
                     </td>
+                   
                     <td>
                       {product.productkey?.length
                         ? product.productkey.map(
@@ -211,7 +214,9 @@ function Product() {
             onSuccess={run}
           />
         </Modal>
+       
       </div>
+     
     </>
   );
 }

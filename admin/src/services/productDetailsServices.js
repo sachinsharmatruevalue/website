@@ -14,8 +14,13 @@ const ProductDetailsServices = {
   
   
   getById:async(id,body)=>{
-    return requests.get(`/api/productdetails/${id}`,body)
+    return requests.get(`/api/product/${id}`,body)
   }
+  
+  // another to access the data
+  //  getById:async(id,body)=>{
+  //   return requests.get(`/api/productdetails/${id}`,body)
+  // }
   
 };
 

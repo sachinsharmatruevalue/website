@@ -12,7 +12,7 @@ const HomeCategory = () => {
         dots: true,
         infinite: true,
         speed: 500,
-        slidesToShow: 3,
+        slidesToShow: 7,
         slidesToScroll: 1,
         responsive: [
             {
@@ -56,7 +56,7 @@ const HomeCategory = () => {
                     <div className="col-md-12 section-title-block" >
                         <div className="section-title">
                             <h2 className="ec-title">Browse By Categories</h2>
-                            <p className="sub-title">Check out our featured products.</p>
+                            
                         </div>
                     </div>
                 </div>
@@ -68,7 +68,7 @@ const HomeCategory = () => {
                                 categories.length > 0 ? (
                                     categories && categories.map((category) => (
                                         <div className="ec_cat_content" key={category._id}>
-                                            <div className="ec_cat_inner" style={{ 'padding-right': ' 330px','padding-top': '30px}'}}>
+                                            <div className="ec_cat_inner" style={{ 'padding-top': '30px}'}}>
                                                 <div className="ec-cat-image"style={{'display':'flex'}}>
                                                     <img
                                                         src={`${process.env.REACT_APP_API_BASE_URL}/${category.image}`} // Concatenate base URL and image path

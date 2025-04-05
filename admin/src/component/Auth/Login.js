@@ -52,27 +52,31 @@ function Login({ setIsAuthenticated, setRole }) {
   
     try {
       const data = await AdminServices.login({ mobileOrEmail, password });
-  
       if (data?.status === true && data?.token) {
         localStorage.setItem("authToken", data?.token);
-        localStorage.setItem("userRole", data?.data?.role);
+        
+        // Decode token to get userType (Admin/User)
+        const decodedToken = JSON.parse(atob(data.token.split(".")[1]));
+        localStorage.setItem("userRole", decodedToken.userType); // ← fixed line
+      
         localStorage.setItem("name", data?.data?.name);
         localStorage.setItem("image", data?.data?.image);
-  
+      
         // Store permissions
         const permissions = {};
         data?.data?.permissions?.forEach((item) => {
           if (item?.menuItem && item?.roles) {
-            permissions[item.menuItem] = item.roles?.[data?.data?.role];
+            permissions[item.menuItem] = item.roles?.[decodedToken.userType];
           }
         });
-  
         localStorage.setItem("userPermissions", JSON.stringify(permissions));
-  
+      
         setIsAuthenticated(true);
-        setRole(data?.data?.role);
-        setTimeout(() => navigate("/dashboard"),  window.location.reload(), 0);
-      } else {
+        setRole(decodedToken.userType);
+      
+        // Redirect to dashboard
+        setTimeout(() => navigate("/dashboard"), window.location.reload(), 0);
+      }else {
         setError("*Invalid Credentials. Please check your email and password.");
       }
     } catch (err) {

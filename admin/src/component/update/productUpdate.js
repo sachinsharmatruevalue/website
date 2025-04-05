@@ -12,7 +12,7 @@ function ProductUpdate({ product, onSuccess, closeModal }) {
     name: "",
     description: "",
     price: "",
-  
+    Originalprice:"",
     brand:"",
     subCategory:"",
     category:"",
@@ -331,6 +331,21 @@ function ProductUpdate({ product, onSuccess, closeModal }) {
                       />
                     </div>
                   </div>
+                  <div className="col-lg-4 col-md-6">
+                    <div className="input-field">
+                      <label className="pt-3">Original price*</label>
+                      <input
+                        type="number"
+                        name="Originalprice"
+                        value={formValues.Originalprice}
+                        onChange={handleInputChange}
+                        required
+                        placeholder="Enter Originalprice"
+                        className="form-control"
+                      />
+                    </div>
+                  </div>
+
 
                   {/* Price */}
                   <div className="col-lg-4 col-md-6">
@@ -379,6 +394,7 @@ function ProductUpdate({ product, onSuccess, closeModal }) {
                             alt="Preview"
                             className="img-thumbnail"
                             style={{ width: "100px", height: "100px" }}
+                            required
                           />
                           <button
                             type="button"
@@ -409,40 +425,40 @@ function ProductUpdate({ product, onSuccess, closeModal }) {
                 <div className="row mb-4 " key={index}>
                   <div className="col-lg-3 col-md-6">
                     <div className="input-field">
-                      <label>Size</label>
+                      <label>Size*</label>
                       <input
                         type="text"
                         className="form-control"
                         value={product.Size}
                         onChange={(e) => handleChange(index, 'Size', e.target.value)}
                         placeholder="Enter product Size"
-                    
+                        required
                       />
                     </div>
                   </div>
                   <div className="col-lg-3 col-md-6">
                     <div className="input-field">
-                      <label>Quantity</label>
+                      <label>Quantity*</label>
                       <input
                         type="text"
                         className="form-control"
                         value={product.Quantity}
                         onChange={(e) => handleChange(index, 'Quantity', e.target.value)}
                         placeholder="Enter product Quantity"
-                       
+                        required
                       />
                     </div>
                   </div>
                   <div className="col-lg-3 col-md-6">
                     <div className="input-field">
-                      <label>Offer Price</label>
+                      <label>Offer Price*</label>
                       <input
                         type="text"
                         className="form-control"
                         value={product.OfferPrice}
                         onChange={(e) => handleChange(index, 'OfferPrice', e.target.value)}
                         placeholder="Enter offerprice"
-                       
+                        required
                       />
                     </div>
                   </div>

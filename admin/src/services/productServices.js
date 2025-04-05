@@ -7,6 +7,13 @@ const Productservices = {
   getproduct: async () => {
     return requests.get(`/api/product/`);
   },
+  getProductCategory: async (id,body) => {
+    return requests.get(`/api/product/product-list-by-categoryId/${id}`, body)
+  },
+
+  getProductSubCategory: async (id,body) => {
+    return requests.get(`/api/product/product-list-by-categoryId/${id}`, body)
+  },
   
   createproduct: async (body) => {
     return requests.post(`/api/product/`, body);

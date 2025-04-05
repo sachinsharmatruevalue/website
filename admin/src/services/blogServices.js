@@ -2,6 +2,10 @@ import requests from "./httpsServices";
 
 const BlogService = {
  
+  getBlogById:async(id)=>
+  {
+    return requests.get(`/api/blog/${id}`);
+  },
   getblog: async () => {
     return requests.get(`/api/blog/`);
   },

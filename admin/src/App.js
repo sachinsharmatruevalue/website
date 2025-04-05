@@ -3,7 +3,7 @@ import {
   BrowserRouter as Router,
   Route,
   Routes,
-  Navigate,
+  Navigate,useLocation 
 } from "react-router-dom";
 import Login from "./component/Auth/Login";
 import Dashboard from "./component/viewmodel/Dashboard";
@@ -65,6 +65,8 @@ import CheckOut from './forntend/CheckOut/CheckOut';
 // import Cart from './forntend/Cart/Cart';
 import TrackOrder from './forntend/Track/TrackOrder';
 import About from './forntend/About/About';
+import TermCondition from "./forntend/Service/termsCondition";
+import PrivacyPolicy from "./forntend/Service/privacayPolicy";
 import SaleProduct from './forntend/product/SaleProduct';
 import OfferBanner from './forntend/banner/OfferBanner';
 import Service from './forntend/Service/Service';
@@ -72,10 +74,12 @@ import ProductDetails from "./forntend/productlist/ProductDetails";
 import AddToCart from "./forntend/Carts/AddToCart";
 import UserProfile from "./forntend/userInformation/UserProfile";
 import Blogs from "./forntend/Blog/Blog";
+import BlogDetails from "./forntend/Blog/BlogDeatils";
 import UserManager from "./component/viewmodel/userManger";
-// import WishList from "./forntend/CheckOut/WishList";
-
-
+import WishList from "./forntend/CheckOut/WishList";
+import Products from "./forntend/product/Product";
+import ProductList from "./forntend/productlist/ProductList";
+import { CurrencyProvider } from "./forntend/CurrencyContent";
 const PrivateRoute = ({ children, isAuthenticated, requiredPermission, isAdmin }) => {
   const permissions = JSON.parse(localStorage.getItem("userPermissions")) || {};
 
@@ -85,10 +89,43 @@ const PrivateRoute = ({ children, isAuthenticated, requiredPermission, isAdmin }
 
   return children;
 };
+function LayoutWrapper({ children, isAuthenticated, isAdmin }) {
+  const location = useLocation(); // Get current route
+  const adminRoutes = [
+    "/admin", "/dashboard", "/banner", "/add-banner", "/notification", "/add-notification", "/category", 
+    "/add-category", "/sub-category", "/add-sub-category", "/brand", "/add-brand", "/product", "/add-product", 
+    "/order", "/user-manger", "/blog", "/add-blog", "/pages", "/policy", "/terms-and-conditions", "/about-us", 
+    "/profile", "/Profile"
+  ];
+
+  // Routes where Header and Footer should be hidden
+  const hideLayoutRoutes = ['/product-details', '/checkout', '/track-order', '/login', '/register','/blogs','/blog/','/category/',`/product-list/category/`,'/order/'];
+
+  // Check if the current route is in admin routes
+  const isAdminRoute = adminRoutes.some(route => location.pathname.startsWith(route));
+
+  // Check if the current route is in the routes where we need to hide Header and Footer
+  const shouldHideLayout = hideLayoutRoutes.some(route => location.pathname.startsWith(route));
+
+  return (
+    <>
+      {/* Render Header only if it's an admin route and should not be hidden */}
+      {!shouldHideLayout && isAuthenticated && isAdmin && isAdminRoute && <Header />}
+      
+      <div className={isAdminRoute ? "admin-layout" : ""}>
+        {children}
+      </div>
+
+      {/* Render Footer only if it's an admin route and should not be hidden */}
+      {!shouldHideLayout && isAuthenticated && isAdmin && isAdminRoute && <Footer />}
+    </>
+  );
+}
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(null);
   const [role, setRole] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
+
   useEffect(() => {
     const token = localStorage.getItem("authToken");
     const userRole = localStorage.getItem("userRole");
@@ -102,9 +139,12 @@ function App() {
     }
   }, []);
 
+ 
+
   return (
+    <CurrencyProvider>
     <Router>
-      {isAuthenticated && <Header />}
+       <LayoutWrapper isAuthenticated={isAuthenticated} isAdmin={isAdmin}>
 
       <Routes>
         <Route
@@ -430,6 +470,7 @@ function App() {
 
 
 
+
         {/* front Routes */}
         <Route path="/" element={<Home />} />
         <Route path='/login' element={<UserLogin />} />
@@ -438,7 +479,7 @@ function App() {
         <Route path='/slider' element={<Slider />} />
         <Route path='/fornt-category' element={<HomeCategory />} />
         <Route path='/fornt-banner' element={<HomeBanner />} />
-        <Route path='/home-product' element={<HomeProduct />} />
+        <Route path='/home-product' element={<Products />} />
         <Route path='/sale-banner' element={<SaleBanner />} />
         <Route path='/trading-product' element={<TreadingHomeProduct />} />
         <Route path='/terading-banner' element={<TreadingBanner />} />
@@ -447,14 +488,16 @@ function App() {
         <Route path="/contact-us" element={<Contact />} />
         <Route path='/add-to-cart' element={<AddToCart />} />
         <Route path='/track-order' element={<TrackOrder />} />
-        <Route path='/about-us' element={<About />} />
+        <Route path='/about' element={<About />} />
+        <Route path='/termscondition' element={<TermCondition />} />
+        <Route path='/privacy-policy' element={<PrivacyPolicy/>} />
         <Route path='/category' element={<Category />} />
         <Route path='/sale-product' element={<SaleProduct />} />
         <Route path='/offer-banner' element={<OfferBanner />} />
         <Route path='/service' element={<Service />} />
-        {/* <Route path='/wishlist' element={<WishList />} /> */}
+        <Route path='/wishlist' element={<WishList />} />
         <Route path="/product-details/:id" element={<ProductDetails />} />
-
+        <Route path="/product-list/:type/:id" element={<ProductList />} />
         {/* category router */}
         <Route path="/category" element={<Category />} />
         <Route path="/cancel2" element={<Category />} />
@@ -464,13 +507,17 @@ function App() {
         <Route path="/homeheader" element={<HomeHeader />} />
         <Route path="/footer" element={<Footer />} />
         <Route path="/blogs" element={<Blogs/>} />
+        <Route path="/blog/:encodedBlogId" element={<BlogDetails />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/home" element={<Home />} />
         <Route path="/producthome" element={<HomeProduct />} />
 
       </Routes>
-
+      
+      </LayoutWrapper>
+      
     </Router>
+    </CurrencyProvider>
   );
 }
 

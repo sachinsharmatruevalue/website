@@ -16,6 +16,7 @@ function AddProduct() {
     name: "",
     images: [],
     description: "",
+    Originalprice:"",
     price: "",
     category: "",
     subCategory: "",
@@ -199,8 +200,8 @@ function AddProduct() {
                   <div className="col-lg-4 col-md-6">
                     <div className="input-field">
                       <label className="pt-3">Category*</label>
-                      <select
-                        className="form-control"
+                      <select 
+                        className="form-control select-bordered"  
                         onChange={handleCategoryChange1}
                         value={formValues.category}
                       >
@@ -270,6 +271,20 @@ function AddProduct() {
                       />
                     </div>
                   </div>
+                  <div className="col-lg-4 col-md-6">
+                    <div className="input-field">
+                      <label className="pt-3">Original Price*</label>
+                      <input
+                        type="number"
+                        name="Originalprice"
+                        value={formValues.Originalprice}
+                        onChange={handleInputChange}
+                        required
+                        placeholder="Enter Originalprice"
+                        className="form-control"
+                      />
+                    </div>
+                  </div>
 
                   {/* Price */}
                   <div className="col-lg-4 col-md-6">
@@ -313,6 +328,7 @@ function AddProduct() {
                         onChange={handleFileChange}
                         className="form-control"
                         multiple
+                        required
                       />
                       <div className="file-preview d-flex flex-wrap">
                         {previewimages.length > 0 ? (
@@ -359,14 +375,14 @@ function AddProduct() {
                       <div className="row mb-4 " key={index}>
                         <div className="col-lg-3 col-md-6">
                           <div className="input-field">
-                            <label>Size</label>
+                            <label>Size*</label>
                             <input
                               type="text"
                               className="form-control"
                               value={product.Size}
                               onChange={(e) => handleChange(index, 'Size', e.target.value)}
                               placeholder="Enter product Size"
-
+                              required
                             />
                           </div>
                         </div>
@@ -378,21 +394,21 @@ function AddProduct() {
                               className="form-control"
                               value={product.Quantity}
                               onChange={(e) => handleChange(index, 'Quantity', e.target.value)}
-                              placeholder="Enter product Quantity"
+                              placeholder="Enter product Quantity" required
 
                             />
                           </div>
                         </div>
                         <div className="col-lg-3 col-md-6">
                           <div className="input-field">
-                            <label>Offer Price</label>
+                            <label>Offer Price*</label>
                             <input
                               type="text"
                               className="form-control"
                               value={product.OfferPrice}
                               onChange={(e) => handleChange(index, 'OfferPrice', e.target.value)}
                               placeholder="Enter offerprice"
-
+                              required
                             />
                           </div>
                         </div>

@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import SideBar from "./sidebar";
+
 import AdminServices from "../../services/adminServices";
+import SideBar from './sidebar'
 function Header() {
 
 
@@ -168,7 +169,7 @@ function Header() {
           </div>
         </div>
       </div>
-      <SideBar />
+      <SideBar/>
     </>
   );
 }

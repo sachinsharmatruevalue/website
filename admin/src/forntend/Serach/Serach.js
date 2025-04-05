@@ -4,14 +4,14 @@ import React, { useState } from 'react'
 const Serach = () => {
 
     const [search, setSearch] = useState('');
-    const [prdocut_name, setProductName] = useState('');
+    const [product_name, setProductName] = useState('');
     const [loading, setLoading] = useState(false);
     const [searchResults, setSearchResults] = useState([]);
     const [showResults, setShowResults] = useState(false);
   
 
     const data={
-        prdocut_name:prdocut_name
+        prdocut_name:product_name
     }
     const searchEverything = async (e) => {
       e.preventDefault();
@@ -45,13 +45,13 @@ const Serach = () => {
             <div className="header-bottom-flex">
               <div className="align-self-center ec-header-search custom-header">
                 <div className="header-search">
-                  <form className="ec-search-group-form" onSubmit={searchEverything} style={{width:'450px'}}>
+                  <form className="ec-search-group-form" onSubmit={searchEverything} style={{width:'450px',border:"1px solid black"}}>
                     <input 
                       className="form-control" 
                       placeholder="I'm searching for..." 
                       type="text" 
                       onChange={handleInputChange}
-                      value={prdocut_name}
+                      value={product_name}
                     />
                     <button type="submit" style={{ display: 'none' }} />
                   </form>

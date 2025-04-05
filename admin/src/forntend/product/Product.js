@@ -4,9 +4,11 @@ import { BsBasket3 } from "react-icons/bs";
 import { Link } from 'react-router-dom';
 import Productservices from '../../services/productServices';
 import { Modal, Button } from "react-bootstrap";
+import HomeHeader from "../HomeHeader";
+import Footer from "../Footer";
 import { useCurrency } from "../CurrencyContent";
 import AddtoCartServices from '../../services/AddtoCart';
-const HomeProduct = ({ price } ) => {
+const Products = () => {
   const { currency } = useCurrency();
   const [products, setProducts] = useState([]);
   const [selectedPrices, setSelectedPrices] = useState({});
@@ -61,10 +63,8 @@ const HomeProduct = ({ price } ) => {
       [productId]: finalPrice,
     }));
     
-  
- 
-   };
-   const handleAddToCart = async (product) => {
+  };
+  const handleAddToCart = async (product) => {
     const user = JSON.parse(localStorage.getItem("user"));
     const userId = user?._id;
   
@@ -87,11 +87,49 @@ const HomeProduct = ({ price } ) => {
       console.error("Failed to add to cart", error);
     }
   };
+  // const onsizeClick = (productId, size) => {
+  //   console.log("Clicked Size:", size, "for Product ID:", productId);
   
+  //   const product = products.find((p) => p._id === productId);
+  //   if (!product) {
+  //     console.error("Product not found!");
+  //     return;
+  //   }
+  
+  //   console.log("Found Product:", product);
+  
+  //   const selectedSize = product.productkey?.find((item) => item.Size === size);
+  //   if (!selectedSize) {
+  //     console.error("Selected size not found in product:", product);
+  //     return;
+  //   }
+  
+  //   // Debugging logs
+  //   console.log("Selected Size:", selectedSize);
+  //   console.log("Original Price:", product.originalPrice);
+  //   console.log("Offer Price:", selectedSize.OfferPrice);
+  
+  //   // Ensure numeric values and fallback to `product.price` if `originalPrice` is missing
+  //   const originalPrice = Number(product.originalPrice) || Number(product.price) || 0;
+  //   const offerPrice = Number(selectedSize.OfferPrice) || 0;
+  
+  //   const finalPrice = offerPrice > 0 ? originalPrice - offerPrice : originalPrice;
+  
+  //   setSelectedPrices((prev) => ({
+  //     ...prev,
+  //     [productId]: finalPrice,
+  //   }));
+  
+  //   console.log("Updated Price for Product:", productId, "Price:", finalPrice);
+  // };
 
   return (
+    <>
+    <HomeHeader/>
     <section className="section ec-trend-product section-space-p">
+      
       <div className="container">
+       
         <div className="row">
           <div className="ec-trend-sale" style={{ display: 'flex', flexWrap: 'wrap', width: '100%' }}>
             {currentProducts.length > 0 ? (
@@ -109,15 +147,13 @@ const HomeProduct = ({ price } ) => {
                         </Link>
                         <div className="ec-pro-actions">
                           {/* Add to Cart Button */}
-                          
-                          <button
-                              title="Add To Cart"
-                              className="add-to-cart"
-                              onClick={() => handleAddToCart(product)}
-                            >
-                              <BsBasket3 style={{ fontSize: "12px", color: "black" }} />
-                            </button>
-                          
+                           <button
+                                                        title="Add To Cart"
+                                                        className="add-to-cart"
+                                                        onClick={() => handleAddToCart(product)}
+                                                      >
+                                                        <BsBasket3 style={{ fontSize: "12px", color: "black" }} />
+                                                      </button>
 
                           {/* Quick View Button (Open Modal) */}
                           <button
@@ -139,11 +175,11 @@ const HomeProduct = ({ price } ) => {
                         </h5>
                         <span className="ec-price">
                         <span className="old-price" style={{ textDecoration: 'line-through', color: 'gray' }}>
-                        {currency.symbol}{product.originalPrice || product.Originalprice}
+                        {currency.symbol}{product.Originalprice}
                           </span>
-
-                           <span className="new-price ml-3">
-                           {currency.symbol}{selectedPrices[product._id] || product.price}
+                          <span className="new-price">
+                            
+                          {currency.symbol}{selectedPrices[product._id] || product.price}
                           </span>
                         </span>
                       </div>
@@ -151,7 +187,7 @@ const HomeProduct = ({ price } ) => {
 
                     {/* Size Selection Buttons */}
                     
-                                    {product.productkey?.map((item) => (
+                    {product.productkey?.map((item) => (
                   <button
                     key={item.Size}
                     className="btn btn-primary m-2"
@@ -160,7 +196,9 @@ const HomeProduct = ({ price } ) => {
                     {item.Size}
                   </button>
                 ))}
+                 
                   </div>
+                 
                   
                 </div>
               ))
@@ -229,13 +267,12 @@ const HomeProduct = ({ price } ) => {
       <div className="col-md-3 mt-4">
   <h5>{selectedProduct?.name}</h5>
   <div className="d-flex align-items-center mt-3">
-  <span className="text-muted text-decoration-line-through me-2">
- 
-  {currency.symbol}{selectedProduct?.Originalprice}
-</span>
-<span className="fs-4 fw-bold text-dark">
-  {currency.symbol}{selectedPrices[selectedProduct?._id] || selectedProduct?.price}
-</span>
+    <span className="text-muted text-decoration-line-through">
+    {currency.symbol} {selectedProduct?.Originalprice}
+    </span>
+    <span className="fs-4 fw-bold text-dark ml-3">
+    {currency.symbol}{selectedPrices[selectedProduct?._id] || selectedProduct?.price}
+    </span>
   </div>
 
   {/* Size Selection */}
@@ -267,7 +304,9 @@ const HomeProduct = ({ price } ) => {
   </Modal.Body>
 </Modal>
     </section>
+    <Footer/>
+    </>
   );
 };
 
-export default HomeProduct;
+export default Products;

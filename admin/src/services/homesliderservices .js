@@ -7,7 +7,12 @@ const HomesliderServices = {
   getBanner: async () => {
     return requests.get(`/api/ban/`);
   },
-  
+
+  getBannerById:async(id)=>
+  {
+    return requests.get(`/api/ban/${id}`);
+  }
+  ,
   createBanner: async (body) => {
     return requests.post(`/api/ban/`, body);
   },

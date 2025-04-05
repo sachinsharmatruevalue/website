@@ -1,50 +1,69 @@
-import React, { useState } from 'react'
-import Footer from '../Footer'
-import HomeHeader from '../HomeHeader'
-import './UserLogin.css';
-import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
-// import { ToastContainer, toast } from 'react-toastify';
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import Cookies from "js-cookie";
+import Footer from "../Footer";
+import HomeHeader from "../HomeHeader";
+import UserServices from "../../services/userservices";
+import "./UserLogin.css";
 
 const UserLogin = () => {
-
-  const [data, setData] = useState(null)
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const user = {
-    email: email,
-    password: password
-  };
+  // Retrieve saved credentials from cookies
+  useEffect(() => {
+    const rememberedEmail = Cookies.get("rememberEmail");
+    const rememberedPassword = Cookies.get("rememberPassword");
 
+    if (rememberedEmail) setEmail(rememberedEmail);
+    if (rememberedPassword) setPassword(rememberedPassword);
+  }, []);
   const handleLogin = async (event) => {
     event.preventDefault();
+    setError(""); // Reset previous error messages
+  
     try {
-      // const token=localStorage.setItem('token')
-      const response = await axios.post(`http://192.168.0.26:4000/api/user/login`, user
-   
-    );  
-       console.log('Response Data-----:', response);
-       navigate('/user-profile')
-
-      setData(response.data.data);
-
- 
-      if (response.data.data.success) {
+      const response = await UserServices.getLogin({ email, password });
+  
+      console.log("Full Response:", response); // ✅ Logs the entire response object
+      console.log("Token received:", response.token); // ✅ Correct way to access token
+      console.log("Response Data:", response.data); // ✅ Logs user details
+  
+      // ✅ Check if token exists (fixing the issue)
+      if (response?.status === true && response?.token) {
+        console.log("Login Successful!");
+  
+        // Store authentication details
+        localStorage.setItem("token", response.token);
+        localStorage.setItem("userId", response.data._id);
+        localStorage.setItem("userRole", response.data.userType);
+        localStorage.setItem("name", response.data.name);
+        localStorage.setItem("email", response.data.email);
+        localStorage.setItem("image", response.data.image || "");
+  
+        // Notify other components about login state change
+        window.dispatchEvent(new Event("storage"));
+  
+        // Redirect and refresh
+        setTimeout(() => {
+          navigate("/");
+          window.location.reload();
+        }, 0);
       } else {
-        setError('Login failed. Please check your credentials.');
+        console.error("Login failed. API response:", response);
+        setError("Login failed. Please check your credentials.");
       }
-
     } catch (err) {
-      console.error('Error:', err);
-      setError(err.response ? err.response.data : err.message);
+      console.error("Error:", err);
+      setError(err.response?.data?.error || "Something went wrong. Please try again.");
     }
   };
- 
-
-
+  
+  
+  
+  
 
   return (
     <>
@@ -56,19 +75,34 @@ const UserLogin = () => {
               <form onSubmit={handleLogin}>
                 <span className="ec-login-wrap">
                   <label>Email Address*</label>
-                  <input type="text" name="name" placeholder="Enter your email add..." required onChange={(e) => setEmail(e.target.value)} value={email} />
+                  <input
+                    type="text"
+                    name="email"
+                    placeholder="Enter your email..."
+                    required
+                    onChange={(e) => setEmail(e.target.value)}
+                    value={email}
+                  />
                 </span>
                 <span className="ec-login-wrap">
                   <label>Password*</label>
-                  <input type="password" name="password" placeholder="Enter your password" required onChange={(e) => setPassword(e.target.value)} value={password} />
+                  <input
+                    type="password"
+                    name="password"
+                    placeholder="Enter your password"
+                    required
+                    onChange={(e) => setPassword(e.target.value)}
+                    value={password}
+                  />
                 </span>
-                <span className="ec-login-wrap ec-login-fp">
-                  <label><a href="#">Forgot Password?</a></label>
-                </span>
+                {error && <p className="error-message">{error}</p>}
                 <span className="ec-login-wrap ec-login-btn">
-                  <button className="btn btn-primary" type="submit">Login</button>
-                  {/* <ToastContainer /> */}
-                  <Link to='/register'><a href="register.html" className="btn btn-secondary">Register</a></Link>
+                  <button className="btn btn-primary" type="submit">
+                    Login
+                  </button>
+                  <Link to="/register">
+                    <button className="btn btn-secondary">Register</button>
+                  </Link>
                 </span>
               </form>
             </div>
@@ -77,7 +111,7 @@ const UserLogin = () => {
       </section>
       <Footer />
     </>
-  )
-}
+  );
+};
 
-export default UserLogin
+export default UserLogin;

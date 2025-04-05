@@ -82,7 +82,7 @@ function Dashboard() {
               </div>
                   
           <div className="col-xl-4 col-sm-6">
-                <div className="g-box g-box1"  style={{ borderLeft: "4px solid red" }}>
+                <div className="g-box g-box1 mt-3"  style={{ borderLeft: "4px solid red" }}>
                   <div>
                     <div className="g-box-inner">
                       {<h4>{data?.data?.totalBrands}</h4>}
@@ -94,9 +94,9 @@ function Dashboard() {
               </div>
                   
           <div className="col-xl-4 col-sm-6">
-                <div className="g-box g-box1"  style={{ borderLeft: "4px solid red" }}>
+                <div className="g-box g-box1 mt-3 "  style={{ borderLeft: "4px solid red" }}>
                   <div>
-                    <div className="g-box-inner">
+                    <div className="g-box-inner ">
                       {<h4>{data?.data?.totalProducts }</h4>}
                       <img src="/admin/img/total-product.svg" alt="" />
                     </div>
@@ -106,7 +106,7 @@ function Dashboard() {
               </div>
                   
           <div className="col-xl-4 col-sm-6">
-                <div className="g-box g-box1"  style={{ borderLeft: "4px solid red" }}>
+                <div className="g-box g-box1 mt-3"  style={{ borderLeft: "4px solid red" }}>
                   <div>
                     <div className="g-box-inner">
                       {<h4>{data?.data?.activeBanners}</h4>}
@@ -117,7 +117,7 @@ function Dashboard() {
                 </div>
               </div>
               <div className="col-xl-4 col-sm-6">
-                <div className="g-box g-box1"  style={{ borderLeft: "4px solid red" }}>
+                <div className="g-box g-box1 mt-3"  style={{ borderLeft: "4px solid red" }}>
                   <div>
                     <div className="g-box-inner">
                       {<h4>{data?.data?.totalOrders }</h4>}
@@ -129,7 +129,7 @@ function Dashboard() {
               </div>
              
               <div className="col-xl-4 col-sm-6">
-                <div className="g-box g-box1"  style={{ borderLeft: "4px solid red" }}>
+                <div className="g-box g-box1 mt-3"  style={{ borderLeft: "4px solid red" }}>
                   <div>
                     <div className="g-box-inner">
                     <h4>{data?.data?.totalNotifications}</h4> 
@@ -140,7 +140,7 @@ function Dashboard() {
                 </div>
               </div>
               <div className="col-xl-4 col-sm-6">
-                <div className="g-box g-box1"  style={{ borderLeft: "4px solid red" }}>
+                <div className="g-box g-box1 mt-3"  style={{ borderLeft: "4px solid red" }}>
                   <div>
                     <div className="g-box-inner">
                     <h4>{data?.data?.totalBlogs}</h4> 

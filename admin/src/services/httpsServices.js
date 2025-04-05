@@ -9,6 +9,7 @@ const instance = axios.create({
 instance.interceptors.request.use(function (config) {
   // Retrieve token from local storage
   const token = localStorage.getItem("authToken");
+  
 
   // Add token to the headers if available
   if (token) {

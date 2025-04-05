@@ -484,6 +484,22 @@ body.nav-md.sidebar-closed  footer {
 
 
 /* sidebar css */
+/* For Webkit browsers (Chrome, Safari) */
+.sidebar::-webkit-scrollbar {
+    width: 5px; /* Width of the scrollbar */
+  }
+  
+  .sidebar::-webkit-scrollbar-track {
+    background: #f1f1f1; /* Background of the scrollbar track */
+    border-radius: 10px;
+  }
+  
+  .sidebar::-webkit-scrollbar-thumb {
+    background:#888; ; /* Scrollbar color */
+    border-radius: 10px;
+  }
+
+
 
 .sidebar-item a{
     font-size:150%;
@@ -805,14 +821,15 @@ thead {
 {
     padding: 5%;
     margin-top: 10px;
+   
 }
 .file-preview
 {
     padding-top: 30px;
 }
 
-
-
+  
+ 
 
 
 
