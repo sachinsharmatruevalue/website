@@ -108,11 +108,11 @@ const UserProfile = () => {
                               src={`${process.env.REACT_APP_API_BASE_URL}/${user?.image}`}
                               alt="User"
                             />
-                            <h5 className="name">{user?.name}</h5>
+                            <h5 className="name">{user?.firstName} {user?.lastName}</h5>
                             <p>({user?.userType})</p>
                           </div>
                           <p>
-                            Hello <span>{user?.name}!</span>
+                            Hello <span>{user?.firstName} {user?.lastName}</span>
                           </p>
                           <p>
                             From your account, you can easily view and track
@@ -125,44 +125,32 @@ const UserProfile = () => {
                         <div className="row">
                           <div className="col-md-6 col-sm-12">
                             <div className="ec-vendor-detail-block space-bottom-30">
-                              <h6>Email Address</h6>
-                              <ul>
-                                <li>
-                                  <strong>Email: </strong>
-                                  {user?.email}
-                                </li>
-                              </ul>
+                              <p className="mb-2">Email</p>
+                              <h6> {user?.email}</h6>
+
                             </div>
                           </div>
                           <div className="col-md-6 col-sm-12">
                             <div className="ec-vendor-detail-block space-bottom-30">
-                              <h6>Contact Number</h6>
-                              <ul>
-                                <li>
-                                  <strong>Phone: </strong>
-                                  {user?.mobileNo}
-                                </li>
-                              </ul>
+                              <p className="mb-2">Mobil NO.</p>
+                              <h6>{user?.mobileNo}</h6>
+
                             </div>
                           </div>
                           <div className="col-md-6 col-sm-12">
                             <div className="ec-vendor-detail-block">
-                              <h6>Address</h6>
-                              <ul>
-                                <li>
-                                  <strong>Home: </strong>
-                                  {user?.address}, {user?.city}, {user?.state} -{" "}
-                                  {user?.pincode}
-                                </li>
-                              </ul>
+                              <p className="mb-2">Address</p>
+                              <h6> {user?.address}, {user?.city}, {user?.state} -{" "}
+                                {user?.pincode}</h6>
+
                             </div>
                           </div>
                         </div>
 
                         <div className="text-center mt-3">
                           <button
-                            className="btn btn-danger"
-                            onClick={handleLogout}
+                            className="btn"
+                            onClick={handleLogout} style={{ background: 'linear-gradient(to right,rgb(233, 115, 181),rgb(241, 82, 135))' }}
                           >
                             Logout
                           </button>

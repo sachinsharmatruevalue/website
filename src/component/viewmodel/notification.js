@@ -18,11 +18,11 @@ function Notification() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedEdit, setSelectedEdit] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-    const [currentPage, setCurrentPage] = useState(1);
-    const productsPerPage = 10;
+  const [currentPage, setCurrentPage] = useState(1);
+  const productsPerPage = 10;
   const filteredData = data?.data?.filter((slider) =>
     slider.title.toLowerCase().includes(searchTerm.toLowerCase())
-  )||[];
+  ) || [];
   const totalProducts = filteredData.length;
   const totalPages = Math.ceil(totalProducts / productsPerPage);
   const startIndex = (currentPage - 1) * productsPerPage;
@@ -68,7 +68,7 @@ function Notification() {
             </div>
             <div className="sub-title-box-right">
               <Link
-                className="Add-new-btn site-btn-green me-5"
+                className="Add-new-btn site-btn-green "
                 to="/add-notification"
               >
                 <img src="img/add-plus.svg" alt="" />
@@ -93,16 +93,16 @@ function Notification() {
               <tbody>
                 {currentProducts?.map((slider, i) => (
                   <tr key={i}>
-                    <td>{i + 1}</td>
+                    <td>{startIndex + i + 1}</td>
                     <td>
                       <div className="product-img">
                         <img
                           src={`${process.env.REACT_APP_API_BASE_URL}/${slider?.image}`}
                           alt="image"
                           style={{
-                            height: "70px",
+                            height: "40px",
                             width: "70px",
-                            objectFit: "contain",
+                            objectFit: "cover",
                           }}
                         />
                       </div>
@@ -118,7 +118,7 @@ function Notification() {
                     </td>
                     <td>
                       <button
-                        className="view-details-btn"
+                        className="view-details-btn "
                         onClick={() => handleEditDetails(slider)}
                       >
                         <FontAwesomeIcon icon={faEdit} />
@@ -126,7 +126,7 @@ function Notification() {
                     </td>
                     <td>
                       <button
-                        className="viewdelete"
+                        className="viewdelete "
                         onClick={() => handleDelete(slider)}
                       >
                         <FontAwesomeIcon icon={faTrash} />
@@ -139,31 +139,35 @@ function Notification() {
           </div>
           <div className="pagination-controls d-flex justify-content-center my-3">
             <button
-              className="btn btn-sm btn-secondary mx-1"
+              className="btn btn-light border rounded-pill px-3 mx-1 d-flex align-items-center"
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
             >
-              Prev
+              ← Prev
             </button>
+
             {[...Array(totalPages)].map((_, index) => (
               <button
                 key={index}
-                className={`btn btn-sm mx-1 ${
-                  currentPage === index + 1 ? "btn-primary" : "btn-outline-primary"
-                }`}
+                className={`btn rounded-pill px-3 mx-1 ${currentPage === index + 1 ? "text-black fw-bold" : "btn-light border"
+                  }`}
+                style={
+                  currentPage === index + 1
+                    ? { backgroundColor: "#dcf6e6", border: "1px solid #dcf6e6" } // light green
+                    : {}
+                }
                 onClick={() => setCurrentPage(index + 1)}
               >
                 {index + 1}
               </button>
             ))}
+
             <button
-              className="btn btn-sm btn-secondary mx-1"
-              onClick={() =>
-                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-              }
+              className="btn btn-light border rounded-pill px-3 mx-1 d-flex align-items-center"
+              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
               disabled={currentPage === totalPages}
             >
-              Next
+              Next →
             </button>
           </div>
         </div>

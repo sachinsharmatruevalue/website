@@ -10,7 +10,10 @@ import AddtoCartServices from "../../services/AddtoCart";
 import { Modal } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
+import { useCart } from "../../Store/addtoCart";
+import Slider from "react-slick";
 const AllWishlists = () => {
+  const { fetchCartCount } = useCart();
   const [wishlists, setWishlists] = useState([]);
   const [loading, setLoading] = useState(true);
   const [hoveredProduct, setHoveredProduct] = useState(null);
@@ -27,6 +30,24 @@ const AllWishlists = () => {
     if (img.startsWith("http") || img.startsWith("/")) return img;
     return `${process.env.REACT_APP_API_BASE_URL}/${img}`;
   };
+  const [activeImageIndex, setActiveImageIndex] = useState({
+    [selectedProduct?._id]: 0, // Default to the first image of the selected product
+  });
+  const handleImageClick = (productId, index) => {
+    setActiveImageIndex((prevState) => ({
+      ...prevState,
+      [productId]: index, // Set active index for the specific product
+    }));
+  };
+  useEffect(() => {
+    if (selectedProduct?.images?.length > 0) {
+      setActiveImageIndex((prevState) => ({
+        ...prevState,
+        [selectedProduct?._id]: 0, // Reset to first image when selectedProduct changes
+      }));
+    }
+  }, [selectedProduct]);
+
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user"));
@@ -35,6 +56,7 @@ const AllWishlists = () => {
       navigate("/login");
       return;
     }
+
 
     const token = localStorage.getItem("token") || user?.token;
 
@@ -46,6 +68,7 @@ const AllWishlists = () => {
     const fetchAllWishlists = async () => {
       try {
         const response = await wishListServices.getAllWishList(token);
+        console.log('whislist ', response);
 
         if (response?.data?.products) {
           setWishlists([response.data]); // Wrap the response in an array
@@ -76,6 +99,13 @@ const AllWishlists = () => {
     try {
       await wishListServices.removeFromWishlist(userId, productId, token);
       toast.success("Wishlist Removed");
+
+      // Remove from localStorage
+      const wishlist = JSON.parse(localStorage.getItem("wishlistItems") || "[]");
+      const updatedWishlist = wishlist.filter(id => id !== productId);
+      localStorage.setItem("wishlistItems", JSON.stringify(updatedWishlist));
+
+      // Refresh state from backend
       const response = await wishListServices.getAllWishList();
       if (response?.data?.products) {
         setWishlists([response.data]);
@@ -86,6 +116,7 @@ const AllWishlists = () => {
       console.error("Error removing wishlist item:", err);
     }
   };
+
 
   const onSizeClick = (product, size) => {
     const selectedSizeObj = product.productkey?.find(
@@ -113,17 +144,17 @@ const AllWishlists = () => {
     const token = localStorage.getItem("token");
     const user = JSON.parse(localStorage.getItem("user"));
     const userId = user?._id;
-  
+
     // Generate or get existing sessionId for guest user
     if (!localStorage.getItem("sessionId")) {
       localStorage.setItem("sessionId", crypto.randomUUID());
     }
     const sessionId = localStorage.getItem("sessionId");
-  
+
     if (!selectedSize) return toast.error("Please select a size.");
-  
+
     const selectedPrice = selectedPrices[product._id] || product.price;
-  
+
     const body = {
       userId: userId || null, // send null if not logged in
       sessionId,
@@ -132,23 +163,38 @@ const AllWishlists = () => {
       selectedSize,
       price: selectedPrice,
     };
-  
+
     try {
       const response = await AddtoCartServices.addToCart(body, token);
-  
+
       if (response?.status === 409) {
         toast.error("This product is already in your cart.");
       } else {
         toast.success("Product added to cart successfully.");
       }
-  
+      fetchCartCount();
       console.log("Added to cart:", response);
     } catch (error) {
       console.error("Failed to add to cart", error);
       toast.error("Failed to add product to cart.");
     }
   };
-
+  const sliderSettings = {
+    dots: false,
+    infinite: true,
+    speed: 500,
+    slidesToShow:
+      selectedProduct && selectedProduct.images?.length >= 4
+        ? 4
+        : selectedProduct?.images?.length || 1,
+    slidesToScroll: 1,
+    beforeChange: (oldIndex, newIndex) => {
+      setActiveImageIndex((prev) => ({
+        ...prev,
+        [selectedProduct._id]: newIndex,
+      }));
+    },
+  };
   const handleQuickView = (product, event) => {
     event.preventDefault();
     setSelectedProduct(product);
@@ -170,7 +216,7 @@ const AllWishlists = () => {
       <div className="container mt-5">
         <h2 className="text-center mb-4 fw-bold">My Wishlist</h2>
         <div className="row justify-content-start">
-          {wishlists.length === 0 ? (
+          {wishlists.length === 0 || !wishlists[0].products || wishlists[0].products.length === 0 ? (
             <p className="text-center">No products found.</p>
           ) : (
             wishlists.map((wishlist, index) =>
@@ -186,21 +232,14 @@ const AllWishlists = () => {
                     onMouseLeave={() => setHoveredProduct(null)}
                   >
                     <div className="card shadow-sm position-relative h-100">
-                      <button
-                        onClick={() =>
-                          removeWishlist(wishlist.userId._id, product._id)
-                        }
-                        className="btn btn-primary"
-                      >
-                        Remove
-                      </button>
+
 
                       <div className="position-relative">
                         <img
                           src={getImageUrl(product?.images?.[0])}
                           alt={product.name}
                           className="card-img-top p-3"
-                          style={{ objectFit: "contain", height: "300px" }}
+                          style={{ objectFit: 'cover', width: '100%' }}
                           onError={(e) => {
                             e.target.src = "/admin/images/default-product.jpg";
                           }}
@@ -259,47 +298,61 @@ const AllWishlists = () => {
                         )}
                       </div>
 
-                      <div className="card-body text-center">
-                        <h6 className="card-title text-truncate">
+                      <div className="card-body ">
+                        <h6 className="card-title text-truncate" style={{ fontSize: '20px' }}>
                           <Link to={`/product-details/${product._id}`}>
-                            {product.name}
+                            {product.name.toUpperCase()}
                           </Link>
                         </h6>
-                        <p className="mb-1">
+                        <p className="mb-1 mt-3">
                           <span className="text-muted text-decoration-line-through me-2">
                             {currency.symbol}
                             {Number(
-                              product.originalPrice || product.price * 1.2
-                            ).toFixed(2)}
+                              product.Originalprice || product.price * 1.2
+                            ).toFixed()}
                           </span>
                           <span className="fw-bold text-danger">
                             {currency.symbol}
                             {selectedPrices[product._id]
                               ? selectedPrices[product._id].toFixed(2)
-                              : Number(product.price).toFixed(2)}
+                              : Number(product.price).toFixed()}
                           </span>
                         </p>
 
-                        <div>
+                        <div>Size:
                           {product.productkey?.map((item) => (
                             <button
                               key={item.Size}
-                              className={`btn btn-primary ml-3 ${
-                                selectedSizes[product._id] === item.Size
-                                  ? "btn-dark"
-                                  : "btn-outline-primary"
-                              }`}
+                              className="m-1" style={{
+                                border: '1px solid',
+                                borderColor:
+                                  selectedSizes[product._id] === item.Size ? 'rgb(242, 6, 112)' : 'rgb(132, 131, 131)',
+                              }}
                               onClick={() => onSizeClick(product, item.Size)}
                             >
                               {item.Size}
                             </button>
+
                           ))}
+
                         </div>
+                        <button
+                          onClick={() =>
+                            removeWishlist(wishlist.userId._id, product._id)
+                          }
+                          className="btn mt-2 fw-bold" style={{ background: 'linear-gradient(to right,rgb(233, 115, 181),rgb(241, 82, 135))' }}
+                        >
+                          Remove
+                        </button>
+
                       </div>
+
                     </div>
                   </div>
                 );
+
               })
+
             )
           )}
         </div>
@@ -321,33 +374,56 @@ const AllWishlists = () => {
         ></Modal.Header>
         <Modal.Body style={{ backgroundColor: "white" }}>
           <div className="row">
+            {/* Left Side - Product Images */}
             <div className="col-md-5">
+              {/* Main Image */}
               <img
-                src={`${process.env.REACT_APP_API_BASE_URL}/${selectedProduct?.images[0]}`}
+                src={`${process.env.REACT_APP_API_BASE_URL}/${selectedProduct?.images?.[
+                  activeImageIndex[selectedProduct?._id]
+                  ]
+                  }`} // Use active index for this product
                 alt={selectedProduct?.name}
                 className="w-100 mb-2"
-                style={{ borderRadius: "10px", height: "80%" }}
+                style={{ borderRadius: "10px", height: "80%", width: "100%" }} // Fixed width typo
               />
-              <div className="d-flex">
-                {selectedProduct?.images.map((img, index) => (
-                  <img
-                    key={index}
-                    src={`${process.env.REACT_APP_API_BASE_URL}/${img}`}
-                    alt={`Thumbnail ${index}`}
-                    className="img-thumbnail mx-1"
-                    style={{ width: "60px", height: "60px", cursor: "pointer" }}
-                  />
+
+              {/* Thumbnails */}
+              <Slider {...sliderSettings}>
+                {selectedProduct?.images?.map((img, index) => (
+                  <div key={index} className="image-wrapper">
+                    <img
+                      src={`${process.env.REACT_APP_API_BASE_URL}/${img}`}
+                      alt={`Thumbnail ${index + 1}`}
+                      className={`img-thumbnail mx-1 ${activeImageIndex[selectedProduct?._id] === index
+                          ? "border border-dark"
+                          : ""
+                        }`}
+                      style={{
+                        width: "70px",
+                        height: "90px",
+                        cursor: "pointer",
+                      }}
+                      onClick={() =>
+                        handleImageClick(selectedProduct?._id, index)
+                      }
+                    />
+                  </div>
                 ))}
-              </div>
+              </Slider>
+
             </div>
 
-            <div className="col-md-3 mt-4">
-              <h5>{selectedProduct?.name}</h5>
+            {/* Right Side - Product Details */}
+            <div className="col-md-4 mt-4">
+              <Link to={`/product-details/${selectedProduct?._id}`}>
+                <h5 className="text-danger fw-bold">{selectedProduct?.name?.toUpperCase()}</h5>
+              </Link>
+              <h5 className="mt-2">{selectedProduct?.Sortdescription}</h5>
+
               <div className="d-flex align-items-center mt-3">
                 <span className="text-muted text-decoration-line-through me-2">
                   {currency.symbol}
-                  {selectedProduct?.originalPrice ||
-                    (selectedProduct?.price * 1.2).toFixed(2)}
+                  {selectedProduct?.Originalprice}
                 </span>
                 <span className="fs-4 fw-bold text-dark">
                   {currency.symbol}
@@ -356,12 +432,17 @@ const AllWishlists = () => {
                 </span>
               </div>
 
+              {/* Size Selection */}
               <div className="mt-3">
                 <h6>Select Size:</h6>
                 {selectedProduct?.productkey?.map((size) => (
                   <button
                     key={size.Size}
-                    className="btn btn-primary m-1"
+                    className="m-1 " style={{
+                      border: '1px solid',
+                      borderColor:
+                        selectedSizes[selectedProduct._id] === size.Size ? 'rgb(242, 6, 112)' : 'rgb(132, 131, 131)',
+                    }}
                     onClick={() => onSizeClick(selectedProduct, size.Size)}
                   >
                     {size.Size}
@@ -369,9 +450,10 @@ const AllWishlists = () => {
                 ))}
               </div>
 
+              {/* Quantity Selection */}
               <div
                 className="mt-3 d-flex align-items-center"
-                style={{ border: "1px solid black" }}
+                style={{ border: "1px solid black", width: '62%' }}
               >
                 <button
                   className="btn btn-outline-dark"
@@ -379,7 +461,7 @@ const AllWishlists = () => {
                 >
                   -
                 </button>
-                <span className="mx-3">{quantity}</span>
+                <span className="mx-4">{quantity}</span>
                 <button
                   className="btn btn-outline-dark"
                   onClick={() => setQuantity(quantity + 1)}
@@ -388,8 +470,9 @@ const AllWishlists = () => {
                 </button>
               </div>
 
+              {/* Add to Cart Button */}
               <button
-                className="btn btn-dark mt-4 w-100"
+                className="btn btn-dark mt-4 w-95"
                 onClick={() =>
                   handleAddToCart(
                     selectedProduct,

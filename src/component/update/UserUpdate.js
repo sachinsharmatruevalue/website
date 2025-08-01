@@ -3,7 +3,8 @@ import UserServices from "../../services/userservices";
 
 function UserUpdate({ user, onSuccess, closeModal }) {
   const [formValues, setFormValues] = useState({
-    name: "",
+    firstName: "",
+    lastName: "",
     email: "",
     mobileNo: "",
     address: "",
@@ -16,7 +17,8 @@ function UserUpdate({ user, onSuccess, closeModal }) {
   useEffect(() => {
     if (user) {
       setFormValues({
-        name: user?.name || "",
+        firstName: user?.firstName || "",
+        lastName: user?.lastName || "",
         email: user?.email || "",
         mobileNo: user?.mobileNo || "",
         address: user?.address || "",
@@ -40,7 +42,7 @@ function UserUpdate({ user, onSuccess, closeModal }) {
     event.preventDefault();
     try {
       const payload = { ...formValues };
-  
+
       // Remove empty fields (so old values don't get overwritten with empty strings)
       Object.keys(payload).forEach((key) => {
         if (!payload[key]) delete payload[key];
@@ -71,8 +73,14 @@ function UserUpdate({ user, onSuccess, closeModal }) {
                     <div className="row">
                       <div className="col-sm-6">
                         <div className="input-field">
-                          <label className="pt-3">Name</label>
-                          <input type="text" name="name" className="form-control" value={formValues.name} onChange={handleInputChange} placeholder="Enter name" required />
+                          <label className="pt-3">First Name</label>
+                          <input type="text" name="firstName" className="form-control" value={formValues.firstName} onChange={handleInputChange} placeholder="Enter name" required />
+                        </div>
+                      </div>
+                      <div className="col-sm-6">
+                        <div className="input-field">
+                          <label className="pt-3">Last Name</label>
+                          <input type="text" name="lastName" className="form-control" value={formValues.lastName} onChange={handleInputChange} placeholder="Enter name" required />
                         </div>
                       </div>
 

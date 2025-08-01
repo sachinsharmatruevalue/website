@@ -27,15 +27,23 @@ const UserLogin = () => {
     try {
       const response = await UserServices.getLogin({ email, password });
 
-      console.log("Full Response:", response); // ✅ Logs the entire response object
-      console.log("Token received:", response.token); // ✅ Correct way to access token
-      console.log("Response Data:", response.data); // ✅ Logs user details
+      // Debug logs (optional)
+      console.log("Full Response:", response);
+      console.log("Token received:", response.token);
+      console.log("Response Data:", response.data);
 
-      // ✅ Check if token exists (fixing the issue)
+      // 🚫 Check if user status is inactive
+      if (response?.data?.status === "Inactive") {
+        setError("Your account is inactive. Please contact support.");
+        toast.error("Your account is inactive. Please contact support.");
+        return; // Stop further execution
+      }
+
+      // ✅ Proceed if status is not inactive and login is successful
       if (response?.status === true && response?.token) {
         toast.success("Login Successful!");
 
-        // Store authentication details
+        // Store user data in localStorage
         localStorage.setItem("token", response.token);
         localStorage.setItem("userId", response.data._id);
         localStorage.setItem("userRole", response.data.userType);
@@ -43,10 +51,10 @@ const UserLogin = () => {
         localStorage.setItem("email", response.data.email);
         localStorage.setItem("image", response.data.image || "");
 
-        // Notify other components about login state change
+        // Notify other components
         window.dispatchEvent(new Event("storage"));
 
-        // Redirect and refresh
+        // Redirect to homepage
         setTimeout(() => {
           navigate("/user-profile");
           window.location.reload();
@@ -61,12 +69,14 @@ const UserLogin = () => {
         err.response?.data?.error || "Something went wrong. Please try again."
       );
     }
+
   };
+
 
   return (
     <>
       <HomeHeader />
-      <section className="ec-page-content section-space-p">
+      <section className="ec-page-content section-space-p mt-5">
         <div className="ec-login-wrapper">
           <div className="ec-login-container">
             <div className="ec-login-form">
@@ -95,11 +105,11 @@ const UserLogin = () => {
                 </span>
                 {error && <p className="error-message">{error}</p>}
                 <span className="ec-login-wrap ec-login-btn">
-                  <button className="btn btn-primary" type="submit">
+                  <button className="btn border" style={{ background: 'linear-gradient(to right,rgb(233, 115, 181),rgb(241, 82, 135))', borderRadius: '10px' }} type="submit">
                     Login
                   </button>
                   <Link to="/register">
-                    <button className="btn btn-secondary">Register</button>
+                    <p className="text-center mt-3">Don't have  an account?<span style={{ color: '#e5106f ' }}> Register Now</span></p>
                   </Link>
                 </span>
               </form>

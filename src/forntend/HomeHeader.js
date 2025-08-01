@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import "./HomeHeader.css";
 import { Link, useNavigate } from "react-router-dom";
@@ -5,88 +6,30 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faAngleDown,
   faPhone,
-  faUser,
-  faHeart,
-  faTicketAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import {
-  faFacebookF,
-  faTwitter,
-  faInstagram,
-  faLinkedin,
-} from "@fortawesome/free-brands-svg-icons";
+  faHeart,
+  faUser,
+} from "@fortawesome/free-regular-svg-icons";
 import AllCategory from "./AllCollectionsCategory/AllCategory";
 import Serach from "./Serach/Serach";
 import { BsBasket } from "react-icons/bs";
 import "bootstrap/dist/js/bootstrap.bundle.min";
 import { useCurrency } from "../forntend/CurrencyContent";
-import AddtoCartServices from "../services/AddtoCart";
-import wishListServices from "../services/wishListServices";
+
+
+import { useWishlist } from "../Store/whislist";
+import { useCart } from "../Store/addtoCart"
 import { toast } from "react-toastify";
 const HomeHeader = () => {
   const navigate = useNavigate();
   const [cartCount, setCartCount] = useState(0);
-  const [wishlistCount, setWishlistCount] = useState(0);
+  const { wishlistCount } = useWishlist();
+  const { CartCount } = useCart();
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
-useEffect(() => {
-  const fetchCartCount = async () => {
-    try {
-      const userData = JSON.parse(localStorage.getItem("user"));
-      const userId = userData?._id;
 
-      if (!userId) {
-        console.warn("User not logged in.");
-        return;
-      }
 
-      const response = await AddtoCartServices.getCartCountByUserId(userId);
-      const cart = response?.data;
 
-      console.log("Cart count response:", response);
-
-      if (cart && Array.isArray(cart.items)) {
-        const totalItems = cart.items.reduce((sum, item) => sum + item.quantity, 0);
-        setCartCount(totalItems);
-      } else {
-        setCartCount(0);
-      }
-    } catch (err) {
-      console.error("Failed to fetch cart count", err);
-    }
-  };
-
-  if (isLoggedIn) {
-    fetchCartCount();
-  }
-}, [isLoggedIn]);
-
-  useEffect(() => {
-    const fetchWishlistCount = async () => {
-      try {
-        const userData = JSON.parse(localStorage.getItem("user"));
-        const userId = userData?._id;
-
-        if (!userId) {
-          console.warn("User not logged in.");
-          return;
-        }
-
-        const response = await wishListServices.getWishlistCount(userId);
-        console.log("Wishlist count response:", response); // should show count: 3
-
-        const count = response?.count;
-        setWishlistCount(count ?? 0);
-      } catch (err) {
-        console.error("Failed to fetch wishlist count", err);
-        setWishlistCount(0);
-      }
-    };
-
-    if (isLoggedIn) {
-      fetchWishlistCount();
-    }
-  }, [isLoggedIn]);
-  // State to store selected currency
 
   const { currency, setCurrency } = useCurrency();
   const onSelectCurrency = (currency) => () => handleCurrencyChange(currency);
@@ -119,7 +62,7 @@ useEffect(() => {
   const handleLogout = () => {
     toast.success("Logout Successfully");
     localStorage.clear();
-    navigate("/");
+    navigate("/login");
   };
 
   return (
@@ -132,7 +75,7 @@ useEffect(() => {
               {/* Phone Number */}
               <div className="col header-top-center">
                 <div className="header-top-call">
-                  <FontAwesomeIcon icon={faPhone}className="p-2" /> Phone:+91 1234567801
+                  <FontAwesomeIcon icon={faPhone} className="p-2" /> Phone:+91 1234567801
                 </div>
               </div>
 
@@ -175,14 +118,14 @@ useEffect(() => {
                           href="#"
                           target="_blank"
                           rel="noopener noreferrer"
-                       
+
                         >
-                        
-                      <img
-                        src="/assets/images/logo/instagram-logo.svg"
-                        alt="Site Logo"
-                      />
-                   
+
+                          <img
+                            src="/assets/images/logo/instagram.png"
+                            alt=""
+                          />
+
                         </a>
                       </li>
                       <li className="list-inline-item">
@@ -190,13 +133,13 @@ useEffect(() => {
                           href="#"
                           target="_blank"
                           rel="noopener noreferrer"
-                        
+
                         >
-                             
-                      <img
-                        src="/assets/images/logo/facebook-logo.svg"
-                        alt="Site Logo"
-                      />
+
+                          <img
+                            src="/assets/images/logo/facebook.png"
+                            alt=""
+                          />
                         </a>
                       </li>
                       <li className="list-inline-item">
@@ -204,13 +147,13 @@ useEffect(() => {
                           href="https://www.instagram.com/"
                           target="_blank"
                           rel="noopener noreferrer"
-                         
+
                         >
-                             
-                      <img
-                        src="/assets/images/logo/twitter-logo.svg"
-                        alt="Site Logo"
-                      />
+
+                          <img
+                            src="/assets/images/logo/twitter.png"
+                            alt=""
+                          />
                         </a>
                       </li>
                       <li className="list-inline-item">
@@ -218,12 +161,12 @@ useEffect(() => {
                           href="#"
                           target="_blank"
                           rel="noopener noreferrer"
-                          style={{ backgroundColor: "#0077B5" }}
+
                         >
-                           <img
-                        src="/assets/images/logo/linkedin-logo.svg"
-                        alt="Site Logo"
-                      />
+                          <img
+                            src="/assets/images/logo/linkedin.png"
+                            alt=""
+                          />
                         </a>
                       </li>
                     </ul>
@@ -236,17 +179,17 @@ useEffect(() => {
         </div>
 
         {/* Main Navigation */}
-        <div className="ec-header-bottom d-none d-lg-block">
+        <div className="ec-header-bottom d-none d-lg-block py-0">
           <div className="container position-relative">
             <div className="row">
-              <div className="header-bottom-flex">
+              <div className="header-bottom-flex align-items-center">
                 <Serach />
                 <div className="align-self-center ec-header-logo">
                   <div className="header-logo">
                     <a href="#">
                       <img
                         src="/assets/images/logo/logo3.png"
-                        alt="Site Logo"
+                        alt=""
                       />
                     </a>
                   </div>
@@ -264,7 +207,8 @@ useEffect(() => {
                             className="dropdown-toggle"
                             data-bs-toggle="dropdown"
                           >
-                            <FontAwesomeIcon icon="fa-solid fa-user"/>
+
+                            <FontAwesomeIcon icon={faUser} />
                           </button>
                           <ul className="dropdown-menu dropdown-menu-right">
                             <li>
@@ -333,10 +277,10 @@ useEffect(() => {
                       className="ec-header-btn ec-side-toggle"
                     >
                       <div className="header-icon">
-                        <BsBasket  style={{ fontSize: '18px' }}/>
+                        <BsBasket style={{ fontSize: '18px' }} />
                       </div>
                       <span className="ec-header-count ec-cart-count">
-                        {cartCount}
+                        {CartCount}
                       </span>
                     </a>
                   </div>
@@ -354,13 +298,13 @@ useEffect(() => {
               <div className="col-sm-12 ec-main-menu-block align-self-center d-none d-lg-block">
                 <div className="ec-main-menu">
                   <ul>
-                    <Link to="/"   className={({ isActive }) => (isActive ? "active" : "")}>
+                    <Link to="/" className={({ isActive }) => (isActive ? "active" : "")}>
                       <li>
                         <a href="#">Home</a>
                       </li>
                     </Link>
                     <AllCategory />
-                    <Link to="/home-product"  className={({ isActive }) => (isActive ? "active" : "")}>
+                    <Link to="/home-product" className={({ isActive }) => (isActive ? "active" : "")}>
                       <li className="dropdown">
                         <a href="#">Products</a>
                       </li>
@@ -378,14 +322,14 @@ useEffect(() => {
                             <a href="#">Contact Us</a>
                           </li>
                         </Link>
-                        <Link to="/cart">
+                        <Link to="/add-to-cart">
                           <li>
                             <a href="#">Cart</a>
                           </li>
                         </Link>
                       </ul>
                     </li>
-                    <Link to="/blogs"  className={({ isActive }) => (isActive ? "active" : "")}>
+                    <Link to="/blogs" className={({ isActive }) => (isActive ? "active" : "")}>
                       <li className="dropdown" >
                         <a href="#">Blog</a>
                       </li>

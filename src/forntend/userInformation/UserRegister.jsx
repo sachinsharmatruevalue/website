@@ -9,7 +9,8 @@ const UserRegister = () => {
   const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
-  const [name, setName] = useState("");
+  const [firstName, setfirstName] = useState("");
+  const [lastName, setlastName] = useState("");
   const [email, setEmail] = useState("");
   const [mobileNo, setMobileNo] = useState("");
   const [password, setPassword] = useState("");
@@ -20,7 +21,8 @@ const UserRegister = () => {
   const [code, setCode] = useState("");
 
   const userData = {
-    name,
+    firstName,
+    lastName,
     email,
     mobileNo,
     password,
@@ -34,6 +36,19 @@ const UserRegister = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    const mobile = mobileNo ? mobileNo.trim() : "";
+
+    if (!/^\d{6}$/.test(pincode)) {
+      alert("Pincode must be exactly 6 digits.");
+
+      return;
+    }
+    if (!/^\d{10}$/.test(mobile)) {
+      alert("Pincode must be exactly 10 digits.");
+
+      return;
+    }
+
     try {
       const response = await UserServices.getRegister(userData);
       setData(response.data);
@@ -67,18 +82,18 @@ const UserRegister = () => {
   return (
     <>
       <HomeHeader />
-      <section className="ec-page-content section-space-p">
+      <section className="ec-page-content section-space-p mt-5">
         <div className="container">
           <div className="row">
             <div className="col-md-12 text-center">
               <div className="section-title">
                 <h2 className="ec-title">Register</h2>
-                <p className="sub-title mb-3">
+                <p className="sub-title">
                   Best place to buy and sell digital products
                 </p>
               </div>
             </div>
-            <div className="ec-register-wrapper">
+            <div className="ec-register-wrapper mt-3">
               <div className="ec-register-container">
                 <div className="ec-register-form">
                   {!data?.otpCode ? (
@@ -88,8 +103,18 @@ const UserRegister = () => {
                         <input
                           type="text"
                           placeholder="Enter your name"
-                          value={name}
-                          onChange={(e) => setName(e.target.value)}
+                          value={firstName}
+                          onChange={(e) => setfirstName(e.target.value)}
+                          required
+                        />
+                      </span>
+                      <span className="ec-register-wrap ec-register-half">
+                        <label>Last Name*</label>
+                        <input
+                          type="text"
+                          placeholder="Enter your name"
+                          value={lastName}
+                          onChange={(e) => setlastName(e.target.value)}
                           required
                         />
                       </span>
@@ -130,6 +155,8 @@ const UserRegister = () => {
                           placeholder="Enter your pincode"
                           value={pincode}
                           onChange={(e) => setPincode(e.target.value)}
+                          maxLength={6}  // max 6 characters
+                          pattern="\d{6}"
                           required
                         />
                       </span>

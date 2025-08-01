@@ -23,13 +23,19 @@ const HomeCategory = () => {
     const getCategory = async () => {
       try {
         const response = await CategoryServices.getCategory();
-        setCategories(response.data);
+        const allCategories = response.data;
+
+        // Filter to only active categories
+        const activeCategories = allCategories.filter(cat => cat.status === "Active");
+
+        setCategories(activeCategories);
       } catch (error) {
         console.error("Failed to fetch Category", error);
       }
     };
     getCategory();
   }, []);
+
 
   const handleSubCategoryClick = (subCategoryId, subCategorySlug) => {
     // Navigate to product list with subcategory ID
@@ -42,7 +48,7 @@ const HomeCategory = () => {
   };
 
   return (
-    <section className="section ec-category-section section-space-p">
+    <section className="section ec-category-section section-space-p mt-5">
       <div className="container">
         <div className="row">
           <div className="col-md-12 section-title-block">
@@ -63,7 +69,7 @@ const HomeCategory = () => {
                       style={{ paddingTop: "30px" }}
                     >
                       <div
-                        className="ec-cat-image ml-5"
+                        className="ec-cat-image"
                         style={{ display: "flex", cursor: "pointer" }}
                         onClick={() =>
                           handleSubCategoryClick(category._id, category.slug)
@@ -80,7 +86,7 @@ const HomeCategory = () => {
                           onClick={() =>
                             handleSubCategoryClick(category._id, category.slug)
                           }
-                          style={{ cursor: "pointer" }}
+                          style={{ cursor: "pointer", color: 'rgb(193, 38, 97)' }}
                         >
                           {category.name}
                         </span>

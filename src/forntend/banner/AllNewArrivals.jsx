@@ -12,8 +12,16 @@ import wishListServices from "../../services/wishListServices";
 import AddtoCartServices from "../../services/AddtoCart";
 import { Modal, Button } from "react-bootstrap";
 import { toast } from "react-toastify";
+import { useWishlist } from "../../Store/whislist";
+import { useCart } from "../../Store/addtoCart";
 const AllNewArrivals = () => {
   const [priceRange, setPriceRange] = useState({ min: 100, max: 7285 });
+  const { fetchCartCount } = useCart();
+  const {
+    wishlistItems,
+    setWishlistItems,
+    fetchWishlistCount,
+  } = useWishlist();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const { currency } = useCurrency();
@@ -23,10 +31,7 @@ const AllNewArrivals = () => {
   const [selectedPrices, setSelectedPrices] = useState({});
   const [selectedSizes, setSelectedSizes] = useState({});
   const [SelectedSizes, SetSelectedSizes] = useState([]);
-  const [wishlistItems, setWishlistItems] = useState(() => {
-    const stored = localStorage.getItem("wishlistItems");
-    return stored ? JSON.parse(stored) : [];
-  });
+
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [quantity, setQuantity] = useState(1);
@@ -120,6 +125,8 @@ const AllNewArrivals = () => {
         setWishlistItems((prev) => [...prev, product._id]);
         toast.success("Product added to wishlist");
       }
+
+      fetchWishlistCount(); // update count
     } catch (error) {
       console.error("Wishlist error", error);
       toast.error("Error updating wishlist");
@@ -129,17 +136,17 @@ const AllNewArrivals = () => {
     const token = localStorage.getItem("token");
     const user = JSON.parse(localStorage.getItem("user"));
     const userId = user?._id;
-  
+
     // Generate or get existing sessionId for guest user
     if (!localStorage.getItem("sessionId")) {
       localStorage.setItem("sessionId", crypto.randomUUID());
     }
     const sessionId = localStorage.getItem("sessionId");
-  
+
     if (!selectedSize) return toast.error("Please select a size.");
-  
+
     const selectedPrice = selectedPrices[product._id] || product.price;
-  
+
     const body = {
       userId: userId || null, // send null if not logged in
       sessionId,
@@ -148,20 +155,20 @@ const AllNewArrivals = () => {
       selectedSize,
       price: selectedPrice,
     };
-  
+
     try {
       const response = await AddtoCartServices.addToCart(body, token);
-  
+
       if (response?.status === 409) {
         toast.error("This product is already in your cart.");
       } else {
         toast.success("Product added to cart successfully.");
       }
-  
+      fetchCartCount();
       console.log("Added to cart:", response);
     } catch (error) {
       console.error("Failed to add to cart", error);
-      toast.error("Failed to add product to cart.");
+      toast.error("This product is already in your cart.");
     }
   };
   const handleQuickView = (product, event) => {
@@ -173,12 +180,17 @@ const AllNewArrivals = () => {
     dots: false,
     infinite: true,
     speed: 500,
-    slidesToShow: 4,
+    slidesToShow:
+      selectedProduct && selectedProduct.images?.length >= 4
+        ? 4
+        : selectedProduct?.images?.length || 1,
     slidesToScroll: 1,
-    responsive: [
-      { breakpoint: 1024, settings: { slidesToShow: 2, slidesToScroll: 1 } },
-      { breakpoint: 600, settings: { slidesToShow: 1, slidesToScroll: 1 } },
-    ],
+    beforeChange: (oldIndex, newIndex) => {
+      setActiveImageIndex((prev) => ({
+        ...prev,
+        [selectedProduct._id]: newIndex,
+      }));
+    },
   };
   const handleSizeChange = (size) => {
     SetSelectedSizes((prev) =>
@@ -219,7 +231,7 @@ const AllNewArrivals = () => {
       productPrices?.length > 0 ? Math.max(...productPrices) : product.price;
 
     const priceMatch =
-      minProductPrice <= priceRange.max && maxProductPrice >= priceRange.min;
+      minProductPrice >= priceRange.min && minProductPrice <= priceRange.max;
 
     return nameMatch && sizeMatch && priceMatch;
   });
@@ -267,56 +279,64 @@ const AllNewArrivals = () => {
     }
   };
 
+  // Previous page function
+  const prevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
   return (
     <>
       <HomeHeader />
-        <div style={{ display: "flex", width: "100%" }}>
+      <div style={{ display: "flex", width: "100%" }}>
+        <div
+          style={{
+            flex: 3,
+            padding: "10px",
+            marginLeft: "20px",
+            marginTop: "1%",
+          }}
+        >
           <div
             style={{
-              flex: 3,
-              padding: "10px",
-              marginLeft: "20px",
-              marginTop: "1%",
+              backgroundColor: "#f7f7f7",
+              height: "50px",
+
+              display: "flex",
+              alignItems: "center",
             }}
           >
-            <div
+            <p
               style={{
-                backgroundColor: "#FDFAF6",
-                height: "50px",
-              
+                fontSize: "20px",
+                marginLeft: "15px",
+                marginBottom: "0",
+              }}
+            >
+              Filter Products By
+            </p>
+          </div>
+
+          <div
+            style={{
+              padding: "15px",
+              marginTop: "10px",
+              backgroundColor: "#fff",
+              border: '1px solid #eeeeee'
+            }}
+          >
+            <h6 style={{ fontWeight: "bold", marginBottom: "10px" }}>
+              Size:
+            </h6>
+
+            <div className="sizeChart"
+              style={{
                 display: "flex",
-                alignItems: "center",
+                flexDirection: "column",
+                marginBottom: "15px",
               }}
             >
-              <p
-                style={{
-                  fontSize: "20px",
-                  marginLeft: "15px",
-                  marginBottom: "0",
-                }}
-              >
-                Filter Products By
-              </p>
-            </div>
-
-            <div
-               style={{
-                padding: "15px",
-                marginTop: "10px",
-                backgroundColor: "#fff",
-              }}
-            >
-              <h6 style={{ fontWeight: "bold", marginBottom: "10px" }}>
-                Size:
-              </h6>
-
-              <div className="sizeChart"
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  marginBottom: "15px",
-                }}
-              >
               {sizeRows.map((row, rowIndex) => (
                 <div key={rowIndex} style={{ display: "flex" }}>
                   {row.map((size) => (
@@ -343,7 +363,7 @@ const AllNewArrivals = () => {
             <div
               className="mt-4"
               style={{
-                backgroundColor: "#FDFAF6",
+                backgroundColor: "#f7f7f7",
                 padding: "15px",
                 borderRadius: "5px",
                 display: "flex",
@@ -383,6 +403,7 @@ const AllNewArrivals = () => {
               min="100"
               max="12099"
               step="1"
+              style={{ backgroundColor: " #f7f7f7" }}
               value={priceRange.max}
               onChange={(e) =>
                 setPriceRange({
@@ -412,14 +433,16 @@ const AllNewArrivals = () => {
                 padding: "10px",
                 marginLeft: "20px",
                 marginTop: "1%",
-                backgroundColor: " #FDFAF6",
+                backgroundColor: " #f7f7f7",
               }}
             >
               <button
                 className="btn mt-2"
                 style={{ backgroundColor: "#FF0B55" }}
               >
-                <img src="img/dashboard.svg" alt="image" />
+                <a href="/">
+                  <img src="img/dashboard.svg" alt="Dashboard" />
+                </a>
               </button>
 
               <div
@@ -474,16 +497,11 @@ const AllNewArrivals = () => {
                       <div className="card h-100 shadow-sm border-0  ec-product-inner ">
                         <div className="ec-pro-image">
                           <img
-                            src={`${process.env.REACT_APP_API_BASE_URL}/${
-                              product.images?.[0] || "default.jpg"
-                            }`}
+                            src={`${process.env.REACT_APP_API_BASE_URL}/${product.images?.[0] || "default.jpg"
+                              }`}
                             alt={product.name}
                             className="main-image"
-                            style={{
-                              height: "400px",
-                              objectFit: "cover",
-                              borderRadius: "10px 10px 0 0",
-                            }}
+                            style={{ height: "303px", width: '100%', objectFit: "cover" }}
                           />
                           <div className="ec-pro-actions">
                             {/* Add to Cart Button */}
@@ -530,7 +548,7 @@ const AllNewArrivals = () => {
                         <div className="ec-pro-content">
                           <h5 className="ec-pro-title">
                             <Link to={`/product-details/${product._id}`}>
-                              {product.name}
+                              {product.name.toUpperCase()}
                             </Link>
                           </h5>
                           <span className="ec-price">
@@ -545,7 +563,7 @@ const AllNewArrivals = () => {
                               {product.originalPrice || product.Originalprice}
                             </span>
 
-                            <span className="new-price ml-3">
+                            <span className="new-price ">
                               {currency.symbol}
                               {selectedPrices[product._id] || product.price}
                             </span>
@@ -555,11 +573,11 @@ const AllNewArrivals = () => {
                           {product.productkey?.map((item) => (
                             <button
                               key={item.Size}
-                              className="btn  m-2" style={{
-      border: '2px solid',
-      borderColor:
-        selectedSizes[product._id] === item.Size ? 'pink' : 'black',
-    }}
+                              className="m-1" style={{
+                                border: '1px solid',
+                                borderColor:
+                                  selectedSizes[product._id] === item.Size ? 'rgb(242, 6, 112)' : 'rgb(132, 131, 131)',
+                              }}
                               onClick={() =>
                                 onSizeClick(product._id, item.Size)
                               }
@@ -576,39 +594,55 @@ const AllNewArrivals = () => {
                 <p className="text-center">No recent arrivals available</p>
               )}
             </div>
-            <div className="ec-pro-pagination">
-                    <span>
-                      Showing {indexOfFirstProduct + 1}-
-                      {Math.min(indexOfLastProduct, products.length)} of{" "}
-                      {products.length} item(s)
-                    </span>
-                    <ul className="ec-pro-pagination-inner">
-                      {Array.from({
-                        length: Math.min(
-                          5,
-                          Math.ceil(products.length / productsPerPage)
-                        ),
-                      }).map((_, index) => (
-                        <li key={index}>
-                          <button
-                            className={
-                              currentPage === index + 1 ? "active" : ""
-                            }
-                            onClick={() => paginate(index + 1)}
-                          >
-                            {index + 1}
-                          </button>
-                        </li>
-                      ))}
-                      {Math.ceil(products.length / productsPerPage) > 5 && (
-                        <li>
-                          <button className="next" onClick={nextPage}>
-                            Next <i className="ecicon eci-angle-right" />
-                          </button>
-                        </li>
-                      )}
-                    </ul>
-                  </div>
+            <div className="custom-pagination-container mt-4">
+              <div className="custom-pagination-info">
+                Showing {indexOfFirstProduct + 1}-
+                {Math.min(indexOfLastProduct, products.length)} of {products.length} item(s)
+              </div>
+              <ul className="custom-pagination">
+                <li>
+                  <button
+                    className="pagination-button"
+                    onClick={prevPage}
+                    disabled={currentPage === 1}
+                  >
+                    ⬅ Prev
+                  </button>
+                </li>
+
+                {Array.from({
+                  length: Math.min(5, Math.ceil(products.length / productsPerPage)),
+                }).map((_, index) => (
+                  <li key={index}>
+                    <button
+                      className={`pagination-number ${currentPage === index + 1 ? "active" : ""
+                        }`}
+                      onClick={() => paginate(index + 1)}
+                    >
+                      {index + 1}
+                    </button>
+                  </li>
+                ))}
+
+                {Math.ceil(products.length / productsPerPage) > 5 && (
+                  <li>
+                    <button className="pagination-button" onClick={nextPage}>
+                      Next ➡
+                    </button>
+                  </li>
+                )}
+
+                <li>
+                  <button
+                    className="pagination-button"
+                    onClick={nextPage}
+                    disabled={currentPage === Math.ceil(products.length / productsPerPage)}
+                  >
+                    Next ➡
+                  </button>
+                </li>
+              </ul>
+            </div>
           </section>
           <Modal
             show={showModal}
@@ -624,13 +658,12 @@ const AllNewArrivals = () => {
             <Modal.Body style={{ backgroundColor: "white" }}>
               <div className="row">
                 {/* Left Side - Product Images */}
-                <div className="col-md-5">
+                <div className="col-md-5" style={{ height: '460px' }}>
                   <img
-                    src={`${process.env.REACT_APP_API_BASE_URL}/${
-                      selectedProduct?.images?.[
-                        activeImageIndex[selectedProduct?._id]
+                    src={`${process.env.REACT_APP_API_BASE_URL}/${selectedProduct?.images?.[
+                      activeImageIndex[selectedProduct?._id]
                       ]
-                    }`} // Use active index for this product
+                      }`} // Use active index for this product
                     alt={selectedProduct?.name}
                     className="w-100 mb-2"
                     style={{
@@ -648,11 +681,10 @@ const AllNewArrivals = () => {
                           key={index}
                           src={`${process.env.REACT_APP_API_BASE_URL}/${img}`} // Actual image URL
                           alt={`Thumbnail ${index + 1}`}
-                          className={`img-thumbnail mx-1 ${
-                            activeImageIndex[selectedProduct?._id] === index
+                          className={`img-thumbnail mx-1 ${activeImageIndex[selectedProduct?._id] === index
                               ? "border border-dark"
                               : ""
-                          }`} // Add border if active
+                            }`} // Add border if active
                           style={{
                             width: "70px",
                             height: "90px",
@@ -668,10 +700,11 @@ const AllNewArrivals = () => {
                 </div>
 
                 {/* Right Side - Product Details */}
-                <div className="col-md-3 mt-4">
+                <div className="col-md-4 mt-4">
                   <Link to={`/product-details/${selectedProduct?._id}`}>
-                    <h5>{selectedProduct?.name}</h5>
+                    <h5 className="text-danger fw-bold" style={{ fontSize: '30px' }}>{selectedProduct?.name?.toUpperCase()}</h5>
                   </Link>
+                  <h5 className="mt-2">{selectedProduct?.Sortdescription}</h5>
                   <div className="d-flex align-items-center mt-3">
                     <span className="text-muted text-decoration-line-through me-2">
                       {currency.symbol}
@@ -690,11 +723,11 @@ const AllNewArrivals = () => {
                     {selectedProduct?.productkey?.map((size) => (
                       <button
                         key={size.Size}
-                        className="btn m-1 mt-4"   style={{
-      border: '2px solid',
-      borderColor:
-        selectedSizes[selectedProduct._id] === size.Size ? 'pink' : 'black',
-    }}
+                        className=" m-1 " style={{
+                          border: '2px solid',
+                          borderColor:
+                            selectedSizes[selectedProduct._id] === size.Size ? 'rgb(242, 6, 112)' : 'rgb(132, 131, 131)',
+                        }}
                         onClick={() =>
                           onSizeClick(selectedProduct._id, size.Size)
                         }
@@ -707,7 +740,7 @@ const AllNewArrivals = () => {
                   {/* Quantity Selection */}
                   <div
                     className="mt-3 d-flex align-items-center"
-                    style={{ border: "1px solid black" }}
+                    style={{ border: "1px solid black", width: '62%' }}
                   >
                     <button
                       className="btn btn-outline-dark "
@@ -715,7 +748,7 @@ const AllNewArrivals = () => {
                     >
                       -
                     </button>
-                    <span className="mx-3">{quantity}</span>
+                    <span className="mx-4">{quantity}</span>
                     <button
                       className="btn btn-outline-dark"
                       onClick={() => setQuantity(quantity + 1)}
@@ -726,7 +759,7 @@ const AllNewArrivals = () => {
 
                   {/* Add to Cart Button */}
                   <button
-                    className="btn btn-dark mt-4 w-100"
+                    className="btn btn-dark mt-4 w-95"
                     onClick={() =>
                       handleAddToCart(
                         selectedProduct,

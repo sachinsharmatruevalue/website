@@ -118,20 +118,23 @@ function SubCategorynUpdate({ subcat, onSuccess, closeModal }) {
                     <div className="row">
                       <div className="col-sm-5">
                         <div className="input-field">
-                          <label className="pt-3">Category</label>
+                          <label className=" pt-3">Category</label>
                           <select
-                            className="form-control"
+                            className="form-control border"
                             name="Category"
                             value={formValues.Category}
                             onChange={handleCategoryChange}
-                          >
-                            <option value="">Select Category</option>
 
-                            {categories.map((category) => (
-                              <option key={category._id} value={category._id}>
-                                {category.name}
-                              </option>
-                            ))}
+                          >
+                            <option value="" >Select Category</option>
+
+                            {categories
+                              .filter((category) => category.status === "Active")
+                              .map((category) => (
+                                <option key={category._id} value={category._id}>
+                                  {category.name}
+                                </option>
+                              ))}
                           </select>
                         </div>
                       </div>
@@ -148,7 +151,7 @@ function SubCategorynUpdate({ subcat, onSuccess, closeModal }) {
                           />
                         </div>
                       </div>
-                      <div className="col-sm-8">
+                      <div className="col-sm-15">
                         <div className="input-field">
                           <label className="pt-3">Description</label>
                           <textarea
@@ -164,7 +167,7 @@ function SubCategorynUpdate({ subcat, onSuccess, closeModal }) {
                       </div>
                       <div className="col-sm-5">
                         <div className="input-field">
-                          <label className="pt-3"> 
+                          <label className="pt-3">
                             Upload <span className="red">*</span>
                           </label>
                           <input

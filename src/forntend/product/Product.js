@@ -7,13 +7,21 @@ import { Modal, Button } from "react-bootstrap";
 import { useCurrency } from "../CurrencyContent";
 import AddtoCartServices from "../../services/AddtoCart";
 import HomeHeader from "../HomeHeader";
-
+import { useWishlist } from "../../Store/whislist";
 import wishListServices from "../../services/wishListServices";
 import Slider from "react-slick";
 import { toast } from "react-toastify";
+import { useCart } from "../../Store/addtoCart";
 const Products = () => {
   const navigate = useNavigate();
   const { currency } = useCurrency();
+  const { fetchCartCount } = useCart();
+  const {
+    wishlistItems,
+    setWishlistItems,
+    fetchWishlistCount,
+  } = useWishlist();
+
   const [products, setProducts] = useState([]);
   const [selectedPrices, setSelectedPrices] = useState({});
   const [priceRange, setPriceRange] = useState({ min: 100, max: 7285 });
@@ -24,10 +32,7 @@ const Products = () => {
   const [quantity, setQuantity] = useState(1);
   const [selectedSizes, setSelectedSizes] = useState({});
   const [SelectedSizes, SetSelectedSizes] = useState([]);
-  const [wishlistItems, setWishlistItems] = useState(() => {
-    const stored = localStorage.getItem("wishlistItems");
-    return stored ? JSON.parse(stored) : [];
-  });
+
 
   const [sortOption, setSortOption] = useState("price");
   const [searchTerm, setSearchTerm] = useState(""); // State for the name filter
@@ -55,18 +60,24 @@ const Products = () => {
     dots: false,
     infinite: true,
     speed: 500,
-    slidesToShow: 4,
+    slidesToShow:
+      selectedProduct && selectedProduct.images?.length >= 4
+        ? 4
+        : selectedProduct?.images?.length || 1,
     slidesToScroll: 1,
-    responsive: [
-      { breakpoint: 1024, settings: { slidesToShow: 2, slidesToScroll: 1 } },
-      { breakpoint: 600, settings: { slidesToShow: 1, slidesToScroll: 1 } },
-    ],
+    beforeChange: (oldIndex, newIndex) => {
+      setActiveImageIndex((prev) => ({
+        ...prev,
+        [selectedProduct._id]: newIndex,
+      }));
+    },
   };
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const response = await Productservices.getproduct();
-        setProducts(response.data);
+        const activeProducts = response.data.filter(product => product.status === 'Active');
+        setProducts(activeProducts);
       } catch (error) {
         console.error("Failed to fetch products", error);
       }
@@ -158,6 +169,13 @@ const Products = () => {
     }
   };
 
+  // Previous page function
+  const prevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
   const onSizeClick = (productId, size) => {
     const product = products.find((p) => p._id === productId);
     if (!product) return;
@@ -185,17 +203,17 @@ const Products = () => {
     const token = localStorage.getItem("token");
     const user = JSON.parse(localStorage.getItem("user"));
     const userId = user?._id;
-  
+
     // Generate or get existing sessionId for guest user
     if (!localStorage.getItem("sessionId")) {
       localStorage.setItem("sessionId", crypto.randomUUID());
     }
     const sessionId = localStorage.getItem("sessionId");
-  
+
     if (!selectedSize) return toast.error("Please select a size.");
-  
+
     const selectedPrice = selectedPrices[product._id] || product.price;
-  
+
     const body = {
       userId: userId || null, // send null if not logged in
       sessionId,
@@ -204,24 +222,25 @@ const Products = () => {
       selectedSize,
       price: selectedPrice,
     };
-  
+
     try {
       const response = await AddtoCartServices.addToCart(body, token);
-  
+
       if (response?.status === 409) {
         toast.error("This product is already in your cart.");
       } else {
         toast.success("Product added to cart successfully.");
       }
-  
+      fetchCartCount();
       console.log("Added to cart:", response);
     } catch (error) {
       console.error("Failed to add to cart", error);
-      toast.error("Failed to add product to cart.");
+      toast.error("This product is already in your cart.");
     }
   };
 
   const handleAddToWishlist = async (product) => {
+    const token = localStorage.getItem("token");
     const user = JSON.parse(localStorage.getItem("user"));
     const userId = user?._id;
 
@@ -233,7 +252,6 @@ const Products = () => {
     const isWishlisted = wishlistItems.includes(product._id);
 
     try {
-      const token = localStorage.getItem("token");
       if (isWishlisted) {
         await wishListServices.removeFromWishlist(userId, product._id, token);
         setWishlistItems((prev) => prev.filter((id) => id !== product._id));
@@ -243,6 +261,8 @@ const Products = () => {
         setWishlistItems((prev) => [...prev, product._id]);
         toast.success("Product added to wishlist");
       }
+
+      fetchWishlistCount(); // update count
     } catch (error) {
       console.error("Wishlist error", error);
       toast.error("Error updating wishlist");
@@ -276,7 +296,7 @@ const Products = () => {
           >
             <div
               style={{
-                backgroundColor: "#FDFAF6",
+                backgroundColor: "#f7f7f7",
                 height: "50px",
                 display: "flex",
                 alignItems: "center",
@@ -298,6 +318,7 @@ const Products = () => {
                 padding: "15px",
                 marginTop: "10px",
                 backgroundColor: "#fff",
+                border: '1px solid #eeeeee'
               }}
             >
               <h6 style={{ fontWeight: "bold", marginBottom: "10px" }}>
@@ -337,7 +358,7 @@ const Products = () => {
               <div
                 className="mt-4"
                 style={{
-                  backgroundColor: "#FDFAF6",
+                  backgroundColor: "#f7f7f7",
                   padding: "15px",
                   borderRadius: "5px",
                   display: "flex",
@@ -373,6 +394,7 @@ const Products = () => {
 
               <input
                 type="range"
+                style={{ backgroundColor: "#f7f7f7", }}
                 className="form-range"
                 min="100"
                 max="12099"
@@ -404,14 +426,16 @@ const Products = () => {
                 padding: "10px",
                 marginLeft: "20px",
                 marginTop: "1%",
-                backgroundColor: " #FDFAF6",
+                backgroundColor: " #f7f7f7",
               }}
             >
               <button
                 className="btn p-1 d-inline-flex align-items-center justify-content-center"
                 style={{ backgroundColor: "#FF0B55", width: "40px" }}
               >
-                <img src="img/dashboard.svg" alt="image" />
+                <a href="/">
+                  <img src="/img/dashboard.svg" alt="Dashboard" />
+                </a>
               </button>
 
               <div
@@ -471,6 +495,7 @@ const Products = () => {
                                     className="main-image"
                                     src={`${process.env.REACT_APP_API_BASE_URL}/${product.images[0]}`}
                                     alt={product.name}
+                                    style={{ height: "303px", width: '100%', objectFit: "cover" }}
                                   />
                                 </Link>
                                 <div className="ec-pro-actions">
@@ -515,7 +540,7 @@ const Products = () => {
                               <div className="ec-pro-content">
                                 <h5 className="ec-pro-title">
                                   <Link to={`/product-details/${product._id}`}>
-                                    {product.name}
+                                    {product.name.toUpperCase()}
                                   </Link>
                                 </h5>
                                 <span className="ec-price">
@@ -531,7 +556,7 @@ const Products = () => {
                                       product.Originalprice}
                                   </span>
 
-                                  <span className="new-price ml-3">
+                                  <span className="new-price ">
                                     {currency.symbol}
                                     {selectedPrices[product._id] ||
                                       product.price}
@@ -542,11 +567,11 @@ const Products = () => {
                             {product.productkey?.map((item) => (
                               <button
                                 key={item.Size}
-                                className="btn  m-2"  style={{
-      border: '2px solid',
-      borderColor:
-        selectedSizes[product._id] === item.Size ? 'pink' : 'black',
-    }}
+                                className="  m-2" style={{
+                                  border: '1px solid',
+                                  borderColor:
+                                    selectedSizes[product._id] === item.Size ? 'rgb(242, 6, 112)' : 'rgb(132, 131, 131)',
+                                }}
                                 onClick={() =>
                                   onSizeClick(product._id, item.Size)
                                 }
@@ -565,39 +590,56 @@ const Products = () => {
                   </div>
 
                   {/* Pagination */}
-                  <div className="ec-pro-pagination">
-                    <span>
+                  <div className="custom-pagination-container mt-4">
+                    <div className="custom-pagination-info">
                       Showing {indexOfFirstProduct + 1}-
-                      {Math.min(indexOfLastProduct, products.length)} of{" "}
-                      {products.length} item(s)
-                    </span>
-                    <ul className="ec-pro-pagination-inner">
+                      {Math.min(indexOfLastProduct, products.length)} of {products.length} item(s)
+                    </div>
+                    <ul className="custom-pagination">
+                      <li>
+                        <button
+                          className="pagination-button"
+                          onClick={prevPage}
+                          disabled={currentPage === 1}
+                        >
+                          ⬅ Prev
+                        </button>
+                      </li>
+
                       {Array.from({
-                        length: Math.min(
-                          5,
-                          Math.ceil(products.length / productsPerPage)
-                        ),
+                        length: Math.min(5, Math.ceil(products.length / productsPerPage)),
                       }).map((_, index) => (
                         <li key={index}>
                           <button
-                            className={
-                              currentPage === index + 1 ? "active" : ""
-                            }
+                            className={`pagination-number ${currentPage === index + 1 ? "active" : ""
+                              }`}
                             onClick={() => paginate(index + 1)}
                           >
                             {index + 1}
                           </button>
                         </li>
                       ))}
+
                       {Math.ceil(products.length / productsPerPage) > 5 && (
                         <li>
-                          <button className="next" onClick={nextPage}>
-                            Next <i className="ecicon eci-angle-right" />
+                          <button className="pagination-button" onClick={nextPage}>
+                            Next ➡
                           </button>
                         </li>
                       )}
+
+                      <li>
+                        <button
+                          className="pagination-button"
+                          onClick={nextPage}
+                          disabled={currentPage === Math.ceil(products.length / productsPerPage)}
+                        >
+                          Next ➡
+                        </button>
+                      </li>
                     </ul>
                   </div>
+
                 </div>
               </div>
 
@@ -616,20 +658,16 @@ const Products = () => {
                 <Modal.Body style={{ backgroundColor: "white" }}>
                   <div className="row">
                     {/* Left Side - Product Images */}
-                    <div className="col-md-5">
+                    <div className="col-md-5" style={{ height: '460px' }}>
+                      {/* Main Image */}
                       <img
-                        src={`${process.env.REACT_APP_API_BASE_URL}/${
-                          selectedProduct?.images?.[
-                            activeImageIndex[selectedProduct?._id]
-                          ]
-                        }`} // Use active index for this product
+                        src={`${process.env.REACT_APP_API_BASE_URL}/${selectedProduct?.images?.[
+                          activeImageIndex[selectedProduct?._id]
+                        ]
+                          }`} // Use active index for this product
                         alt={selectedProduct?.name}
                         className="w-100 mb-2"
-                        style={{
-                          borderRadius: "10px",
-                          height: "80%",
-                          width: "100%",
-                        }} // Fixed width typo
+                        style={{ borderRadius: "10px", height: "79%", width: "100%" }} // Fixed width typo
                       />
 
                       {/* Thumbnails */}
@@ -637,14 +675,12 @@ const Products = () => {
                         {selectedProduct?.images?.map((img, index) => (
                           <div key={index} className="image-wrapper">
                             <img
-                              key={index}
-                              src={`${process.env.REACT_APP_API_BASE_URL}/${img}`} // Actual image URL
+                              src={`${process.env.REACT_APP_API_BASE_URL}/${img}`}
                               alt={`Thumbnail ${index + 1}`}
-                              className={`img-thumbnail mx-1 ${
-                                activeImageIndex[selectedProduct?._id] === index
-                                  ? "border border-dark"
-                                  : ""
-                              }`} // Add border if active
+                              className={`img-thumbnail mx-1 ${activeImageIndex[selectedProduct?._id] === index
+                                ? "border border-dark"
+                                : ""
+                                }`}
                               style={{
                                 width: "70px",
                                 height: "90px",
@@ -652,21 +688,21 @@ const Products = () => {
                               }}
                               onClick={() =>
                                 handleImageClick(selectedProduct?._id, index)
-                              } // Update active image index for the specific product
+                              }
                             />
                           </div>
                         ))}
                       </Slider>
+
                     </div>
 
                     {/* Right Side - Product Details */}
-                    <div className="col-md-3 mt-4">
+                    <div className="col-md-4 mt-4">
                       <Link to={`/product-details/${selectedProduct?._id}`}>
-                        <h5>{selectedProduct?.name}</h5>
+                        <h5 className="text-danger fw-bold" style={{ fontSize: '30px' }}>{selectedProduct?.name?.toUpperCase()}</h5>
                       </Link>
-                      <h5 className="mt-2">
-                        {selectedProduct?.Sortdescription}
-                      </h5>
+                      <h5 className="mt-2">{selectedProduct?.Sortdescription}</h5>
+
                       <div className="d-flex align-items-center mt-3">
                         <span className="text-muted text-decoration-line-through me-2">
                           {currency.symbol}
@@ -678,35 +714,37 @@ const Products = () => {
                             selectedProduct?.price}
                         </span>
                       </div>
+
+                      {/* Size Selection */}
                       <div className="mt-3">
                         <h6>Select Size:</h6>
                         {selectedProduct?.productkey?.map((size) => (
                           <button
                             key={size.Size}
-                            className="btn  m-1 mt-4"    style={{
-      border: '2px solid',
-      borderColor:
-        selectedSizes[selectedProduct._id] === size.Size ? 'pink' : 'black',
-    }}
-                            onClick={() =>
-                              onSizeClick(selectedProduct._id, size.Size)
-                            }
+                            className=" m-1 " style={{
+                              border: '2px solid',
+                              borderColor:
+                                selectedSizes[selectedProduct._id] === size.Size ? 'rgb(242, 6, 112)' : 'rgb(132, 131, 131)',
+                            }}
+                            onClick={() => onSizeClick(selectedProduct._id, size.Size)}
                           >
                             {size.Size}
                           </button>
                         ))}
                       </div>
+
+                      {/* Quantity Selection */}
                       <div
                         className="mt-3 d-flex align-items-center"
-                        style={{ border: "1px solid black" }}
+                        style={{ border: "1px solid black", width: '62%' }}
                       >
                         <button
-                          className="btn btn-outline-dark "
+                          className="btn btn-outline-dark"
                           onClick={() => setQuantity(Math.max(1, quantity - 1))}
                         >
                           -
                         </button>
-                        <span className="mx-3">{quantity}</span>
+                        <span className="mx-4">{quantity}</span>
                         <button
                           className="btn btn-outline-dark"
                           onClick={() => setQuantity(quantity + 1)}
@@ -715,19 +753,18 @@ const Products = () => {
                         </button>
                       </div>
 
-                      <div className="mt-3">
-                        <button
-                          className="btn btn-primary"
-                          onClick={() =>
-                            handleAddToCart(
-                              selectedProduct,
-                              selectedSizes[selectedProduct?._id]
-                            )
-                          }
-                        >
-                          Add to Cart
-                        </button>
-                      </div>
+                      {/* Add to Cart Button */}
+                      <button
+                        className="btn btn-dark mt-4 w-95"
+                        onClick={() =>
+                          handleAddToCart(
+                            selectedProduct,
+                            selectedSizes[selectedProduct?._id]
+                          )
+                        }
+                      >
+                        + Add to Cart
+                      </button>
                     </div>
                   </div>
                 </Modal.Body>

@@ -4,9 +4,6 @@ import { Link, useNavigate } from "react-router-dom";
 import AdminServices from "../../services/adminServices";
 import SideBar from './sidebar'
 function Header() {
-
-
-
   const [admin, setAdmin] = useState({
     name: "",
     image: "",
@@ -88,7 +85,21 @@ function Header() {
         aria-hidden="true"
       >
         <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content">
+          <div className="modal-content" 
+          
+          style={{
+  position: 'relative',
+  display: 'flex',
+  flexDirection: 'column',
+  width: '900px',
+  height: '350px',
+  pointerEvents: 'auto',
+  backgroundColor: '#ffffff',
+  backgroundClip: 'padding-box',
+  border: '1px solid black',
+  backgroundColor:'#f0f3ff',width:'auto'
+
+}}>
             <div className="modal-header">
               <h5 className="modal-title text-center">Support</h5>
               <button
@@ -102,11 +113,11 @@ function Header() {
               <div className="row align-items-center justify-content-center">
                 <div className="col-md-12">
                   <ul className="list-unstyled support-list">
-                    <li className="modalbodyli">
-                      <a href="tel:+91 98765 43210">+91 98765 43210</a>
+                    <li className="modalbodyli  " >
+                      <a href="tel:+91 98765 43210"  >+91 98765 43210</a>
                       <a
                         href="tel:+91 98765 43210"
-                        className="contact-btn-right"
+                        className="contact-btn-right " 
                       >
                         <span>
                           <i className="fa fa-phone" />
@@ -142,7 +153,21 @@ function Header() {
         aria-hidden="true"
       >
         <div className="modal-dialog">
-          <div className="modal-content">
+          <div className="modal-content"
+                
+          style={{
+  position: 'relative',
+  display: 'flex',
+  flexDirection: 'column',
+  width: '900px',
+  height: '400px',
+  pointerEvents: 'auto',
+  backgroundColor: '#ffffff',
+  backgroundClip: 'padding-box',
+  border: '1px solid black',
+  backgroundColor:'#f0f3ff',width:'auto'
+
+}}>
             <div className="modal-body px-5 pb-0">
               <div className="row align-items-center">
                 <div className="modal-body py-4 text-center">

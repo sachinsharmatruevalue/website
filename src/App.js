@@ -25,7 +25,7 @@ import Brand from "./component/viewmodel/brand";
 import AddBrand from "./component/addServices/addBrand";
 import Product from "./component/viewmodel/product";
 import AddProduct from "./component/addServices/addProduct";
-import SignUp from "./component/Auth/signUp";
+
 import TermsAndCondition from "./component/viewmodel/termsandConditons";
 import Policy from "./component/viewmodel/policy";
 import AboutUs from "./component/viewmodel/aboutUs";
@@ -56,7 +56,7 @@ import HomeCategory from "./forntend/category/HomeCategory";
 
 // Banner
 import HomeBanner from "./forntend/banner/HomeBanner";
-import NewArrivals from "./forntend/banner/NewArrivals";
+
 import AllNewArrivals from "./forntend/banner/AllNewArrivals";
 import Kurti from "./forntend/banner/AllKurti";
 import AllSaree from "./forntend/banner/AllSaree";
@@ -70,7 +70,9 @@ import TrackOrder from "./forntend/Track/TrackOrder";
 import About from "./forntend/About/About";
 import TermCondition from "./forntend/Service/termsCondition";
 import PrivacyPolicy from "./forntend/Service/privacayPolicy";
-
+import { WishlistProvider } from "./Store/whislist";
+import{CartProvider} from "./Store/addtoCart"
+import ScrollToTop  from "./Store/scrooler"
 import Service from "./forntend/Service/Service";
 import ProductDetails from "./forntend/productlist/ProductDetails";
 import AddToCart from "./forntend/Carts/AddToCart";
@@ -205,7 +207,10 @@ function App() {
 
   return (
     <CurrencyProvider>
+        <WishlistProvider>
+          <CartProvider>
       <Router>
+         <ScrollToTop />
         <LayoutWrapper isAuthenticated={isAuthenticated} isAdmin={isAdmin}>
           <Routes>
             <Route
@@ -221,19 +226,7 @@ function App() {
                 )
               }
             />
-            <Route
-              path="/signup"
-              element={
-                isAuthenticated ? (
-                  <Navigate to="/admin/dashboard" />
-                ) : (
-                  <SignUp
-                    setIsAuthenticated={setIsAuthenticated}
-                    setRole={setRole}
-                  />
-                )
-              }
-            />
+        
             <Route
               path="/dashboard"
               element={
@@ -575,7 +568,7 @@ function App() {
             <Route path="/fornt-category" element={<HomeCategory />} />
             <Route path="/fornt-banner" element={<HomeBanner />} />
             <Route path="/home-product" element={<Products />} />
-            <Route path="/new-arrivals" element={<NewArrivals />} />
+            
 
             <Route path="/all-new-arrivals" element={<AllNewArrivals />} />
             <Route path="/kurti" element={<Kurti />} />
@@ -586,7 +579,7 @@ function App() {
             <Route path="/checkout" element={<CheckOut />} />
             <Route path="/contact-us" element={<Contact />} />
             <Route path="/add-to-cart" element={<AddToCart />} />
-            <Route path="/track-order/:orderId" element={<TrackOrder />} />
+            <Route path="/track-order/:orderId/:orderProductId" element={<TrackOrder />} />
             <Route path="/about" element={<About />} />
             <Route path="/termscondition" element={<TermCondition />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
@@ -622,6 +615,8 @@ function App() {
         </LayoutWrapper>
         <ToastContainer />
       </Router>
+      </CartProvider>
+      </WishlistProvider>
     </CurrencyProvider>
   );
 }

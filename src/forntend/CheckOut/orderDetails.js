@@ -18,6 +18,7 @@ const OrderDetails = () => {
   const [loading, setLoading] = useState(true);
   const [selectedPayment, setSelectedPayment] = useState({});
   const [addresses, setAddresses] = useState([]);
+  const [agreeTerms, setAgreeTerms] = useState(false);
   const [selectedAddressIndex, setSelectedAddressIndex] = useState(null);
   const [newAddress, setNewAddress] = useState({
     firstName: "",
@@ -31,8 +32,8 @@ const OrderDetails = () => {
 
   useEffect(() => {
     if (!cartId) {
-      toast.error("Cart ID not provided");
-      navigate("/cart");
+      // toast.error("Cart ID not provided");
+      navigate("/add-to-cart");
       return;
     }
 
@@ -120,6 +121,12 @@ const OrderDetails = () => {
       return;
     }
 
+    // ✅ Check agreement for COD
+    if (selectedPayment === "COD" && !agreeTerms) {
+      toast.error("Please agree to the Terms & Conditions before placing the order.");
+      return;
+    }
+
     const selectedShippingAddress = addresses[selectedAddressIndex];
 
     // ✅ Step: Check pincode via backend
@@ -128,32 +135,28 @@ const OrderDetails = () => {
         selectedShippingAddress.pincode.trim()
       );
 
-      // Log the response to check the actual structure
-      console.log("pinRes", pinRes); // Ensure that pinRes has a 'status' field
+      console.log("pinRes", pinRes);
 
-      // Check if the response has 'status'
       if (!pinRes || typeof pinRes.status === "undefined") {
         toast.error("Invalid response structure from pincode check.");
         return;
       }
 
-      // Check the pincode status
       if (pinRes.status === false) {
         toast.error(pinRes.message || "This pincode is not serviceable.");
         return;
       }
 
-      // If the status is true, pincode is serviceable
       if (pinRes.status === true) {
         console.log("Pincode is serviceable.");
       }
     } catch (err) {
       console.error("Pincode check failed:", err);
-      toast.error("This pincode is not serviceable.. Choice An Other Pincode.");
+      toast.error("This pincode is not serviceable. Choose another one.");
       return;
     }
 
-    // ✅ Continue placing order if pincode is valid
+    // ✅ Continue placing order
     const txnId = `TXN_${Date.now()}`;
     const shippingDetails = `${selectedShippingAddress.address}, ${selectedShippingAddress.city}, ${selectedShippingAddress.state}, ${selectedShippingAddress.country}, ${selectedShippingAddress.pincode}`;
 
@@ -174,7 +177,8 @@ const OrderDetails = () => {
       orderStatus: cart.paymentStatus,
       orderDate: new Date(),
 
-      firstName: user.name.split(" ")[0],
+      firstName: user.firstName,
+      lastName: user.lastName,
       country: selectedShippingAddress.country,
       address: selectedShippingAddress.address,
       city: selectedShippingAddress.city,
@@ -210,6 +214,7 @@ const OrderDetails = () => {
       toast.error("Order placement failed.");
     }
   };
+
 
   const handleDeleteAddress = async (id) => {
     try {
@@ -386,19 +391,20 @@ const OrderDetails = () => {
                                 {addr.address}, {addr.city}, {addr.state} -{" "}
                                 {addr.pincode}, {addr.country}
                                 <input
-                                  type="radio"
+                                  type="checkbox"
                                   name="selectedAddress"
                                   checked={selectedAddressIndex === actualIndex}
                                   onChange={() =>
                                     setSelectedAddressIndex(actualIndex)
                                   }
-                                  className="me-2"
+                                  className="me-2 "
                                   style={{
                                     transform: "scale(0.3)",
-                                    marginRight: "6px",
+                                    marginRight: "8px",
                                   }}
                                 />
                               </div>
+
                               <button
                                 className="btn btn-primary mt-3"
                                 onClick={() => handleEditClick(addr._id)}
@@ -411,6 +417,7 @@ const OrderDetails = () => {
                               >
                                 Delete
                               </button>
+
                             </div>
                           </div>
                         );
@@ -435,9 +442,8 @@ const OrderDetails = () => {
                   ].map(([field, label]) => (
                     <div
                       key={field}
-                      className={`${
-                        field === "address" ? "col-12" : "col-md-6"
-                      } mb-2`}
+                      className={`${field === "address" ? "col-12" : "col-md-6"
+                        } mb-2`}
                     >
                       <input
                         type="text"
@@ -528,7 +534,7 @@ const OrderDetails = () => {
                     <div className="ec-pay-desc">
                       Please select the preferred payment method.
                     </div>
-                    <div className="form-check">
+                    <div className="form-check d-flex align-items-center">
                       <input
                         type="radio"
                         className="form-check-input "
@@ -551,7 +557,7 @@ const OrderDetails = () => {
                       </label>
                     </div>
 
-                    <div className="form-check">
+                    <div className="form-check d-flex align-items-center">
                       <input
                         type="radio"
                         className="form-check-input"
@@ -572,110 +578,22 @@ const OrderDetails = () => {
                         Online
                       </label>
                     </div>
-                    {/* 
-                    {selectedPayment === "online" && (
-                      <div
-                        style={{
-                          border: "1px solid #ccc",
-                          padding: "15px",
-                          marginTop: "10px",
-                          borderRadius: "10px",
-                          backgroundColor: "#f9f9f9",
-                        }}
-                      >
-                        <h5 style={{ marginBottom: "10px" }}>
-                          Choose Online Payment Method
-                        </h5>
-                        <div
-                          style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: "10px",
-                          }}
-                        >
-                          <div>
-                            <input
-                              type="radio"
-                              name="paymentMethod"
-                              id="PAYUMONEY"
-                              value="PAYUMONEY"
-                              style={{
-                                transform: "scale(0.3)",
-                                marginRight: "6px",
-                              }}
-                              onChange={(e) =>
-                                setSelectedPayment(e.target.value)
-                              }
-                              checked={selectedPayment === "PAYUMONEY"}
-                            />
-                            <label
-                              htmlFor="PAYUMONEY"
-                              style={{ marginLeft: "8px" }}
-                            >
-                              PAYUMONEY CARD
-                            </label>
-                          </div>
-                          <div>
-                            <input
-                              type="radio"
-                              name="paymentMethod"
-                              id="BINANCE"
-                              value="BINANCE"
-                              style={{
-                                transform: "scale(0.3)",
-                                marginRight: "6px",
-                              }}
-                              onChange={(e) =>
-                                setSelectedPayment(e.target.value)
-                              }
-                              checked={selectedPayment === "BINANCE"}
-                            />
-                            <label
-                              htmlFor="BINANCE"
-                              style={{ marginLeft: "8px" }}
-                            >
-                              BINANCE CARD
-                            </label>
-                          </div>
-                          <div>
-                            <input
-                              type="radio"
-                              name="paymentMethod"
-                              id="CREDIT_CARD"
-                              value="CREDIT_CARD"
-                              style={{
-                                transform: "scale(0.3)",
-                                marginRight: "6px",
-                              }}
-                              onChange={(e) =>
-                                setSelectedPayment(e.target.value)
-                              }
-                              checked={selectedPayment === "CREDIT_CARD"}
-                            />
-                            <label
-                              htmlFor="CREDIT_CARD"
-                              style={{ marginLeft: "8px" }}
-                            >
-                              CREDIT_CARD
-                            </label>
-                          </div>
-                        </div>
-                      </div>
-                    )} */}
+
 
                     <textarea
                       className="form-control mt-3"
                       placeholder="Add comments about your order"
                     />
-                    <div className="form-check mt-2">
+                    <div className="form-check align-items-center mt-2">
                       <input
                         className="form-check-input mt-1"
                         type="checkbox"
+                        checked={agreeTerms}
+                        onChange={(e) => setAgreeTerms(e.target.checked)}
                         style={{
                           width: "10px",
                           height: "20px",
                           border: "2px solid #000",
-
                           appearance: "none",
                           position: "relative",
                         }}

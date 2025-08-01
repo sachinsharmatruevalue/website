@@ -10,17 +10,22 @@ import AddtoCartServices from "../../services/AddtoCart";
 import { Modal, Button } from "react-bootstrap";
 import Slider from "react-slick";
 import { toast } from "react-toastify";
+import { useWishlist } from "../../Store/whislist";
+import { useCart } from "../../Store/addtoCart";
 const Kurti = () => {
   const { currency } = useCurrency();
+  const {
+    wishlistItems,
+    setWishlistItems,
+    fetchWishlistCount,
+  } = useWishlist();
+  const { fetchCartCount } = useCart();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate(); // For navigation on button click
   const [selectedPrices, setSelectedPrices] = useState({});
   const [selectedSizes, setSelectedSizes] = useState({});
-  const [wishlistItems, setWishlistItems] = useState(() => {
-    const stored = localStorage.getItem("wishlistItems");
-    return stored ? JSON.parse(stored) : [];
-  });
+
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [quantity, setQuantity] = useState(1);
@@ -52,9 +57,11 @@ const Kurti = () => {
         // console.log('All Products',allProducts)
         const kurtiProducts = allProducts.filter((product) => {
           const subCatName = product.subCategory?.[0]?.name?.toLowerCase();
-          return subCatName === "kurti";
+          const isActive = product.status?.toLowerCase() === "active";
+          return subCatName === "kurti" && isActive;
         });
         // console.log('All kurti',kurtiProducts)
+
         setProducts(kurtiProducts);
       } catch (err) {
         console.error("Error fetching Kurti products:", err);
@@ -62,10 +69,10 @@ const Kurti = () => {
         setLoading(false);
       }
     };
-  
+
     fetchKurtiProducts();
   }, []);
-  
+
   const onSizeClick = (productId, size) => {
     const product = products.find((p) => p._id === productId);
     if (!product) return;
@@ -110,6 +117,8 @@ const Kurti = () => {
         setWishlistItems((prev) => [...prev, product._id]);
         toast.success("Product added to wishlist");
       }
+
+      fetchWishlistCount(); // update count
     } catch (error) {
       console.error("Wishlist error", error);
       toast.error("Error updating wishlist");
@@ -119,17 +128,17 @@ const Kurti = () => {
     const token = localStorage.getItem("token");
     const user = JSON.parse(localStorage.getItem("user"));
     const userId = user?._id;
-  
+
     // Generate or get existing sessionId for guest user
     if (!localStorage.getItem("sessionId")) {
       localStorage.setItem("sessionId", crypto.randomUUID());
     }
     const sessionId = localStorage.getItem("sessionId");
-  
+
     if (!selectedSize) return toast.error("Please select a size.");
-  
+
     const selectedPrice = selectedPrices[product._id] || product.price;
-  
+
     const body = {
       userId: userId || null, // send null if not logged in
       sessionId,
@@ -138,20 +147,20 @@ const Kurti = () => {
       selectedSize,
       price: selectedPrice,
     };
-  
+
     try {
       const response = await AddtoCartServices.addToCart(body, token);
-  
+
       if (response?.status === 409) {
         toast.error("This product is already in your cart.");
       } else {
         toast.success("Product added to cart successfully.");
       }
-  
+      fetchCartCount();
       console.log("Added to cart:", response);
     } catch (error) {
       console.error("Failed to add to cart", error);
-      toast.error("Failed to add product to cart.");
+      toast.error("This product is already in your cart.");
     }
   };
   const handleQuickView = (product, event) => {
@@ -163,18 +172,23 @@ const Kurti = () => {
     dots: false,
     infinite: true,
     speed: 500,
-    slidesToShow: 4,
+    slidesToShow:
+      selectedProduct && selectedProduct.images?.length >= 4
+        ? 4
+        : selectedProduct?.images?.length || 1,
     slidesToScroll: 1,
-    responsive: [
-      { breakpoint: 1024, settings: { slidesToShow: 2, slidesToScroll: 1 } },
-      { breakpoint: 600, settings: { slidesToShow: 1, slidesToScroll: 1 } },
-    ],
+    beforeChange: (oldIndex, newIndex) => {
+      setActiveImageIndex((prev) => ({
+        ...prev,
+        [selectedProduct._id]: newIndex,
+      }));
+    },
   };
   return (
     <>
       <section className="ec-banner section py-3">
         <div className="container">
-        <h2 className="custom-heading mb-4 fw-bold text-center ">Kurti</h2>
+          <h2 className="custom-heading mb-4 fw-bold ">Kurti</h2>
           <div className="row g-4">
             {loading ? (
               <div className="text-center">
@@ -192,9 +206,8 @@ const Kurti = () => {
                     <div className="ec-pro-image">
                       <img
                         className="main-image"
-                        src={`${process.env.REACT_APP_API_BASE_URL}/${
-                          product.images?.[0] || "default.jpg"
-                        }`}
+                        src={`${process.env.REACT_APP_API_BASE_URL}/${product.images?.[0] || "default.jpg"
+                          }`}
                         alt={product.name}
                         style={{
                           height: "450px",
@@ -241,7 +254,7 @@ const Kurti = () => {
                     <div className="ec-pro-content">
                       <h5 className="ec-pro-title">
                         <Link to={`/product-details/${product._id}`}>
-                          {product.name}
+                          {product.name.toUpperCase()}
                         </Link>
                       </h5>
                       <span className="ec-price">
@@ -249,14 +262,14 @@ const Kurti = () => {
                           className="old-price"
                           style={{
                             textDecoration: "line-through",
-                            color: "gray",
+                            color: "#777",
                           }}
                         >
                           {currency.symbol}
                           {product.originalPrice || product.Originalprice}
                         </span>
 
-                        <span className="new-price ml-3">
+                        <span className="new-price">
                           {currency.symbol}
                           {selectedPrices[product._id] || product.price}
                         </span>
@@ -266,11 +279,11 @@ const Kurti = () => {
                       {product.productkey?.map((item) => (
                         <button
                           key={item.Size}
-                          className="btn  m-2" style={{
-      border: '2px solid',
-      borderColor:
-        selectedSizes[product._id] === item.Size ? 'pink' : 'black',
-    }}
+                          className="m-1" style={{
+                            border: '1px solid',
+                            borderColor:
+                              selectedSizes[product._id] === item.Size ? 'rgb(242, 6, 112)' : 'rgb(132, 131, 131)',
+                          }}
                           onClick={() => onSizeClick(product._id, item.Size)}
                         >
                           {item.Size}
@@ -287,15 +300,15 @@ const Kurti = () => {
 
           {/* Explore All Button */}
           {!loading && products.length > 4 && (
-  <div className="text-center mt-4">
-    <button
-      className="btn btn-primary"
-      onClick={() => navigate("/kurti")}
-    >
-      Explore All
-    </button>
-  </div>
-)}
+            <div className="text-center mt-4">
+              <button
+                className="btn fw-bold"
+                onClick={() => navigate("/kurti")} style={{ background: 'linear-gradient(to right,rgb(233, 115, 181),rgb(241, 82, 135))', color: 'black' }}
+              >
+                Explore All
+              </button>
+            </div>
+          )}
         </div>
       </section>
       <Modal
@@ -312,13 +325,12 @@ const Kurti = () => {
         <Modal.Body style={{ backgroundColor: "white" }}>
           <div className="row">
             {/* Left Side - Product Images */}
-            <div className="col-md-5">
+            <div className="col-md-5" style={{ height: '460px' }}>
               <img
-                src={`${process.env.REACT_APP_API_BASE_URL}/${
-                  selectedProduct?.images?.[
-                    activeImageIndex[selectedProduct?._id]
+                src={`${process.env.REACT_APP_API_BASE_URL}/${selectedProduct?.images?.[
+                  activeImageIndex[selectedProduct?._id]
                   ]
-                }`} // Use active index for this product
+                  }`} // Use active index for this product
                 alt={selectedProduct?.name}
                 className="w-100 mb-2"
                 style={{ borderRadius: "10px", height: "80%", width: "100%" }} // Fixed width typo
@@ -332,11 +344,10 @@ const Kurti = () => {
                       key={index}
                       src={`${process.env.REACT_APP_API_BASE_URL}/${img}`} // Actual image URL
                       alt={`Thumbnail ${index + 1}`}
-                      className={`img-thumbnail mx-1 ${
-                        activeImageIndex[selectedProduct?._id] === index
+                      className={`img-thumbnail mx-1 slider-image  ${activeImageIndex[selectedProduct?._id] === index
                           ? "border border-dark"
                           : ""
-                      }`} // Add border if active
+                        }`} // Add border if active
                       style={{
                         width: "70px",
                         height: "90px",
@@ -352,9 +363,9 @@ const Kurti = () => {
             </div>
 
             {/* Right Side - Product Details */}
-            <div className="col-md-3 mt-4">
+            <div className="col-md-4 mt-4">
               <Link to={`/product-details/${selectedProduct?._id}`}>
-                <h5>{selectedProduct?.name}</h5>
+                <h5 className="text-danger fw-bold" style={{ fontSize: '30px' }}>{selectedProduct?.name?.toUpperCase()}</h5>
               </Link>
               <h5 className="mt-2">{selectedProduct?.Sortdescription}</h5>
               <div className="d-flex align-items-center mt-3">
@@ -375,11 +386,11 @@ const Kurti = () => {
                 {selectedProduct?.productkey?.map((size) => (
                   <button
                     key={size.Size}
-                    className="btn  m-1 mt-4"  style={{
-      border: '2px solid',
-      borderColor:
-        selectedSizes[selectedProduct._id] === size.Size ? 'pink' : 'black',
-    }}
+                    className="m-1" style={{
+                      border: '2px solid',
+                      borderColor:
+                        selectedSizes[selectedProduct._id] === size.Size ? 'rgb(242, 6, 112)' : 'rgb(132, 131, 131)',
+                    }}
                     onClick={() => onSizeClick(selectedProduct._id, size.Size)}
                   >
                     {size.Size}
@@ -390,7 +401,7 @@ const Kurti = () => {
               {/* Quantity Selection */}
               <div
                 className="mt-3 d-flex align-items-center"
-                style={{ border: "1px solid black" }}
+                style={{ border: "1px solid black", width: '62%' }}
               >
                 <button
                   className="btn btn-outline-dark "
@@ -398,7 +409,7 @@ const Kurti = () => {
                 >
                   -
                 </button>
-                <span className="mx-3">{quantity}</span>
+                <span className="mx-4">{quantity}</span>
                 <button
                   className="btn btn-outline-dark"
                   onClick={() => setQuantity(quantity + 1)}
@@ -409,7 +420,7 @@ const Kurti = () => {
 
               {/* Add to Cart Button */}
               <button
-                className="btn btn-dark mt-4 w-100"
+                className="btn btn-dark mt-4 w-95"
                 onClick={() =>
                   handleAddToCart(
                     selectedProduct,

@@ -19,7 +19,7 @@ function UserManager() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const productsPerPage = 10;
+
   const handleEditDetails = (user) => {
     setSelectedUser(user);
     setIsEditModalOpen(true);
@@ -46,9 +46,11 @@ function UserManager() {
 
   // Filter data based on the search term
   const filteredUsers = data?.users?.filter((user) =>
-    user?.name?.toLowerCase().includes(searchTerm.toLowerCase())
-  )||[];
+    user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user?.mobileNo?.toLowerCase().includes(searchTerm.toLowerCase())
+  ) || [];
   const totalProducts = filteredUsers.length;
+  const productsPerPage = 10;
   const totalPages = Math.ceil(totalProducts / productsPerPage);
   const startIndex = (currentPage - 1) * productsPerPage;
   const endIndex = startIndex + productsPerPage;
@@ -62,7 +64,7 @@ function UserManager() {
             <input
               type="search"
               name="search"
-              placeholder="Search by User Name"
+              placeholder="Search by User Name and mobileNo"
               value={searchTerm}
               onChange={handleSearchChange}
             />
@@ -70,19 +72,19 @@ function UserManager() {
               <FontAwesomeIcon icon={faSearch} />
             </button>
           </div>
-       
+
         </div>
 
-        <div className="container-box-inner">
-          <table className="table" style={{ width: "100%" }}>
+        <div className="container-box-inner" style={{ overflowX: "auto" }}>
+          <table className="table">
             <thead>
               <tr className="trs">
                 <th>#</th>
-              
+
                 <th>Name</th>
                 <th>Email</th>
                 <th>Mobile No</th>
-                <th>Address</th>
+                <th  >Address</th>
                 <th>Status</th>
                 <th>Edit</th>
                 <th>Delete</th>
@@ -91,12 +93,13 @@ function UserManager() {
             <tbody>
               {currentProducts?.map((user, i) => (
                 <tr key={user._id}>
-                  <td>{i + 1}</td>
-                 
-                  <td>{user.name}</td>
+                  <td>{startIndex + i + 1}</td>
+
+                  <td>{user.firstName} {user.lastName}</td>
+
                   <td>{user.email}</td>
                   <td>{user.mobileNo}</td>
-                  <td>{user.address},{user.city},{user.state},{user.pincode}</td>
+                  <td style={{ width: '250px' }}>{user.address},{user.city},{user.state},{user.pincode}</td>
                   <td className="status-toggle">
                     <HelpTogal help={user} page="user" onSuccess={run} />
                   </td>
@@ -110,7 +113,7 @@ function UserManager() {
                   </td>
                   <td>
                     <button
-                      className="viewdelete"
+                      className="viewdelete "
                       onClick={() => handleDelete(user)}
                     >
                       <FontAwesomeIcon icon={faTrash} />
@@ -121,36 +124,40 @@ function UserManager() {
             </tbody>
           </table>
         </div>
-            {/* Pagination Controls */}
-            <div className="pagination-controls d-flex justify-content-center my-3">
+        {/* Pagination Controls */}
+        <div className="pagination-controls d-flex justify-content-center my-3">
+          <button
+            className="btn btn-light border rounded-pill px-3 mx-1 d-flex align-items-center"
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+          >
+            ← Prev
+          </button>
+
+          {[...Array(totalPages)].map((_, index) => (
             <button
-              className="btn btn-sm btn-secondary mx-1"
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-            >
-              Prev
-            </button>
-            {[...Array(totalPages)].map((_, index) => (
-              <button
-                key={index}
-                className={`btn btn-sm mx-1 ${
-                  currentPage === index + 1 ? "btn-primary" : "btn-outline-primary"
+              key={index}
+              className={`btn rounded-pill px-3 mx-1 ${currentPage === index + 1 ? "text-black fw-bold" : "btn-light border"
                 }`}
-                onClick={() => setCurrentPage(index + 1)}
-              >
-                {index + 1}
-              </button>
-            ))}
-            <button
-              className="btn btn-sm btn-secondary mx-1"
-              onClick={() =>
-                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+              style={
+                currentPage === index + 1
+                  ? { backgroundColor: "#dcf6e6", border: "1px solid #dcf6e6" } // light green
+                  : {}
               }
-              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage(index + 1)}
             >
-              Next
+              {index + 1}
             </button>
-          </div>
+          ))}
+
+          <button
+            className="btn btn-light border rounded-pill px-3 mx-1 d-flex align-items-center"
+            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+            disabled={currentPage === totalPages}
+          >
+            Next →
+          </button>
+        </div>
       </div>
 
       {/* Edit User Modal */}

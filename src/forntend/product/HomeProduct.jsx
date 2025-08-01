@@ -9,10 +9,19 @@ import { useCurrency } from "../CurrencyContent";
 import AddtoCartServices from "../../services/AddtoCart";
 import wishListServices from "../../services/wishListServices";
 import Slider from "react-slick";
-
+import { useWishlist } from "../../Store/whislist";
+import { useCart } from "../../Store/addtoCart";
 const HomeProduct = () => {
   const { currency } = useCurrency();
-    const [selectedSize, setSelectedSize] = useState(null);
+  const {
+    wishlistItems,
+    setWishlistItems,
+    fetchWishlistCount,
+  } = useWishlist();
+
+
+
+  const { fetchCartCount } = useCart();
   const [products, setProducts] = useState([]);
   const [selectedPrices, setSelectedPrices] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
@@ -21,10 +30,10 @@ const HomeProduct = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [selectedSizes, setSelectedSizes] = useState({});
-  const [wishlistItems, setWishlistItems] = useState(() => {
-    const stored = localStorage.getItem("wishlistItems");
-    return stored ? JSON.parse(stored) : [];
-  });
+  // const [wishlistItems, setWishlistItems] = useState(() => {
+  //   const stored = localStorage.getItem("wishlistItems");
+  //   return stored ? JSON.parse(stored) : [];
+  // });
   const [activeImageIndex, setActiveImageIndex] = useState({
     [selectedProduct?._id]: 0, // Default to the first image of the selected product
   });
@@ -45,23 +54,29 @@ const HomeProduct = () => {
       }));
     }
   }, [selectedProduct]);
+
   const sliderSettings = {
     dots: false,
     infinite: true,
     speed: 500,
-    slidesToShow: 4,
+    slidesToShow:
+      selectedProduct && selectedProduct.images?.length >= 4
+        ? 4
+        : selectedProduct?.images?.length || 1,
     slidesToScroll: 1,
-    responsive: [
-      { breakpoint: 1024, settings: { slidesToShow: 2, slidesToScroll: 1 } },
-      { breakpoint: 600, settings: { slidesToShow: 1, slidesToScroll: 1 } },
-    ],
+    beforeChange: (oldIndex, newIndex) => {
+      setActiveImageIndex((prev) => ({
+        ...prev,
+        [selectedProduct._id]: newIndex,
+      }));
+    },
   };
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const response = await Productservices.getproduct();
-        // console.log('dta',response)
-        setProducts(response.data);
+        const activeProducts = response.data.filter(product => product.status === 'Active');
+        setProducts(activeProducts);
       } catch (error) {
         console.error("Failed to fetch products", error);
       }
@@ -89,8 +104,15 @@ const HomeProduct = () => {
     }
   };
 
+  // Previous page function
+  const prevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
   const onSizeClick = (productId, size) => {
-    
+
     const product = products.find((p) => p._id === productId);
     if (!product) return;
 
@@ -117,17 +139,18 @@ const HomeProduct = () => {
     const token = localStorage.getItem("token");
     const user = JSON.parse(localStorage.getItem("user"));
     const userId = user?._id;
-  
+
     // Generate or get existing sessionId for guest user
     if (!localStorage.getItem("sessionId")) {
-      localStorage.setItem("sessionId", crypto.randomUUID());
+      const newSessionId = crypto.randomUUID();
+      localStorage.setItem("sessionId", newSessionId);
     }
     const sessionId = localStorage.getItem("sessionId");
-  
+
     if (!selectedSize) return toast.error("Please select a size.");
-  
+
     const selectedPrice = selectedPrices[product._id] || product.price;
-  
+
     const body = {
       userId: userId || null, // send null if not logged in
       sessionId,
@@ -136,23 +159,24 @@ const HomeProduct = () => {
       selectedSize,
       price: selectedPrice,
     };
-  
+
     try {
       const response = await AddtoCartServices.addToCart(body, token);
-  
+
       if (response?.status === 409) {
         toast.error("This product is already in your cart.");
       } else {
         toast.success("Product added to cart successfully.");
       }
-  
+      fetchCartCount();
       console.log("Added to cart:", response);
     } catch (error) {
       console.error("Failed to add to cart", error);
-      toast.error("Failed to add product to cart.");
+      toast.error("This product is already in your cart");
     }
   };
-  
+
+
 
   const handleAddToWishlist = async (product) => {
     const token = localStorage.getItem("token");
@@ -176,13 +200,16 @@ const HomeProduct = () => {
         setWishlistItems((prev) => [...prev, product._id]);
         toast.success("Product added to wishlist");
       }
+
+      fetchWishlistCount(); // update count
     } catch (error) {
       console.error("Wishlist error", error);
       toast.error("Error updating wishlist");
     }
   };
+
   return (
-    <section className="section ec-trend-product section-space-p">
+    <section className="section ec-trend-product section-space-p mt-4">
       <div className="container">
         <div className="row">
           <div
@@ -258,7 +285,7 @@ const HomeProduct = () => {
                       <div className="ec-pro-content">
                         <h5 className="ec-pro-title">
                           <Link to={`/product-details/${product._id}`}>
-                            {product.name}
+                            {product.name.toUpperCase()}
                           </Link>
                         </h5>
                         <span className="ec-price">
@@ -266,14 +293,14 @@ const HomeProduct = () => {
                             className="old-price"
                             style={{
                               textDecoration: "line-through",
-                              color: "gray",
+                              color: "#777",
                             }}
                           >
                             {currency.symbol}
                             {product.originalPrice || product.Originalprice}
                           </span>
 
-                          <span className="new-price ml-3">
+                          <span className="new-price ">
                             {currency.symbol}
                             {selectedPrices[product._id] || product.price}
                           </span>
@@ -286,11 +313,11 @@ const HomeProduct = () => {
                     {product.productkey?.map((item) => (
                       <button
                         key={item.Size}
-                        className="btn  m-2"  style={{
-      border: '2px solid',
-      borderColor:
-        selectedSizes[product._id] === item.Size ? 'pink' : 'black',
-    }}
+                        className="m-1" style={{
+                          border: '1px solid',
+                          borderColor:
+                            selectedSizes[product._id] === item.Size ? 'rgb(242, 6, 112)' : 'rgb(132, 131, 131)',
+                        }}
                         onClick={() => onSizeClick(product._id, item.Size)}
                       >
                         {item.Size}
@@ -305,35 +332,52 @@ const HomeProduct = () => {
           </div>
 
           {/* Pagination */}
-          <div className="ec-pro-pagination">
-            <span>
-              Showing {indexOfFirstProduct + 1}-
-              {Math.min(indexOfLastProduct, products.length)} of{" "}
-              {products.length} item(s)
-            </span>
-            <ul className="ec-pro-pagination-inner">
+          <div className="custom-pagination-container mt-4">
+            <div className="custom-pagination-info">
+
+            </div>
+            <ul className="custom-pagination">
+              <li>
+                <button
+                  className="pagination-button"
+                  onClick={prevPage}
+                  disabled={currentPage === 1}
+                >
+                  ⬅ Prev
+                </button>
+              </li>
+
               {Array.from({
-                length: Math.min(
-                  5,
-                  Math.ceil(products.length / productsPerPage)
-                ),
+                length: Math.min(5, Math.ceil(products.length / productsPerPage)),
               }).map((_, index) => (
                 <li key={index}>
                   <button
-                    className={currentPage === index + 1 ? "active" : ""}
+                    className={`pagination-number ${currentPage === index + 1 ? "active" : ""
+                      }`}
                     onClick={() => paginate(index + 1)}
                   >
                     {index + 1}
                   </button>
                 </li>
               ))}
+
               {Math.ceil(products.length / productsPerPage) > 5 && (
                 <li>
-                  <button className="next" onClick={nextPage}>
-                    Next <i className="ecicon eci-angle-right" />
+                  <button className="pagination-button" onClick={nextPage}>
+                    Next ➡
                   </button>
                 </li>
               )}
+
+              <li>
+                <button
+                  className="pagination-button"
+                  onClick={nextPage}
+                  disabled={currentPage === Math.ceil(products.length / productsPerPage)}
+                >
+                  Next ➡
+                </button>
+              </li>
             </ul>
           </div>
         </div>
@@ -354,14 +398,13 @@ const HomeProduct = () => {
         <Modal.Body style={{ backgroundColor: "white" }}>
           <div className="row">
             {/* Left Side - Product Images */}
-            <div className="col-md-5">
+            <div className="col-md-5" style={{ height: '460px' }}>
               {/* Main Image */}
               <img
-                src={`${process.env.REACT_APP_API_BASE_URL}/${
-                  selectedProduct?.images?.[
-                    activeImageIndex[selectedProduct?._id]
+                src={`${process.env.REACT_APP_API_BASE_URL}/${selectedProduct?.images?.[
+                  activeImageIndex[selectedProduct?._id]
                   ]
-                }`} // Use active index for this product
+                  }`} // Use active index for this product
                 alt={selectedProduct?.name}
                 className="w-100 mb-2"
                 style={{ borderRadius: "10px", height: "80%", width: "100%" }} // Fixed width typo
@@ -372,14 +415,12 @@ const HomeProduct = () => {
                 {selectedProduct?.images?.map((img, index) => (
                   <div key={index} className="image-wrapper">
                     <img
-                      key={index}
-                      src={`${process.env.REACT_APP_API_BASE_URL}/${img}`} // Actual image URL
+                      src={`${process.env.REACT_APP_API_BASE_URL}/${img}`}
                       alt={`Thumbnail ${index + 1}`}
-                      className={`img-thumbnail mx-1 ${
-                        activeImageIndex[selectedProduct?._id] === index
+                      className={`img-thumbnail mx-1 ${activeImageIndex[selectedProduct?._id] === index
                           ? "border border-dark"
                           : ""
-                      }`} // Add border if active
+                        }`}
                       style={{
                         width: "70px",
                         height: "90px",
@@ -387,17 +428,18 @@ const HomeProduct = () => {
                       }}
                       onClick={() =>
                         handleImageClick(selectedProduct?._id, index)
-                      } // Update active image index for the specific product
+                      }
                     />
                   </div>
                 ))}
               </Slider>
+
             </div>
 
             {/* Right Side - Product Details */}
-            <div className="col-md-3 mt-4">
+            <div className="col-md-4 mt-4">
               <Link to={`/product-details/${selectedProduct?._id}`}>
-                <h5>{selectedProduct?.name}</h5>
+                <h5 className="text-danger fw-bold" style={{ fontSize: '30px' }}>  {selectedProduct?.name?.toUpperCase()}</h5>
               </Link>
               <h5 className="mt-2">{selectedProduct?.Sortdescription}</h5>
 
@@ -419,11 +461,11 @@ const HomeProduct = () => {
                 {selectedProduct?.productkey?.map((size) => (
                   <button
                     key={size.Size}
-                    className="btn  m-1 mt-4"  style={{
-      border: '2px solid',
-      borderColor:
-        selectedSizes[selectedProduct._id] === size.Size ? 'pink' : 'black',
-    }}
+                    className="m-1 " style={{
+                      border: '1px solid',
+                      borderColor:
+                        selectedSizes[selectedProduct._id] === size.Size ? 'rgb(242, 6, 112)' : 'rgb(132, 131, 131)',
+                    }}
                     onClick={() => onSizeClick(selectedProduct._id, size.Size)}
                   >
                     {size.Size}
@@ -434,7 +476,7 @@ const HomeProduct = () => {
               {/* Quantity Selection */}
               <div
                 className="mt-3 d-flex align-items-center"
-                style={{ border: "1px solid black" }}
+                style={{ border: "1px solid black", width: '62%' }}
               >
                 <button
                   className="btn btn-outline-dark"
@@ -442,7 +484,7 @@ const HomeProduct = () => {
                 >
                   -
                 </button>
-                <span className="mx-3">{quantity}</span>
+                <span className="mx-4">{quantity}</span>
                 <button
                   className="btn btn-outline-dark"
                   onClick={() => setQuantity(quantity + 1)}
@@ -453,7 +495,7 @@ const HomeProduct = () => {
 
               {/* Add to Cart Button */}
               <button
-                className="btn btn-dark mt-4 w-100"
+                className="btn btn-dark mt-4 w-95"
                 onClick={() =>
                   handleAddToCart(
                     selectedProduct,

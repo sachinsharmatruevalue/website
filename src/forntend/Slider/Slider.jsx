@@ -11,7 +11,12 @@ const Slider = () => {
     const fetchBanners = async () => {
       try {
         const response = await BannerServices.getBanner();
-        setBanners(response.data);
+        const allBanners = response.data;
+
+        // Filter only banners with status === 'Active'
+        const activeBanners = allBanners.filter(banner => banner.status === "Active");
+
+        setBanners(activeBanners); // ✅ Only set active banners
       } catch (error) {
         console.error("Error fetching banners:", error);
       } finally {
@@ -21,6 +26,7 @@ const Slider = () => {
 
     fetchBanners();
   }, []);
+
 
   return (
     <div className="slider-container">
